@@ -437,29 +437,38 @@ openclaw config validate
 
 plugin install failure ဖြစ်ပြီး config invalid ဖြစ်နေလျှင် docs က `openclaw doctor --fix` နဲ့ `openclaw plugins doctor` ကိုသုံးဖို့ အချက်ပေးထားပါတယ်။ 
 
-## လူတွေ OpenClaw ကို လက်တွေ့ဘယ်လိုသုံးကြလဲ — Cron Jobs / Scheduled Automation Use Cases
+# လူတွေ OpenClaw ကို လက်တွေ့ဘယ်လိုသုံးကြလဲ — Cron Jobs / Scheduled Automation Use Cases
 
-OpenClaw ကို လူတွေ chatbot တစ်ခုလိုပဲမဟုတ်ဘဲ အချိန်အလိုက် အလုပ်လုပ်ပေးတဲ့ personal automation agent အဖြစ်လည်း သုံးကြပါတယ်။ Official docs အရ Cron က Gateway ထဲမှာ run တဲ့ built-in scheduler ဖြစ်ပြီး jobs တွေကို persist လုပ်ထားနိုင်သလို, သတ်မှတ်ချိန်ရောက်ရင် agent ကို wake လုပ်ပြီး output ကို chat channel သို့ webhook endpoint ထဲပြန်ပို့နိုင်ပါတယ်။  ￼
+OpenClaw ကို လူတွေ chatbot တစ်ခုလိုပဲမဟုတ်ဘဲ **အချိန်အလိုက် အလုပ်လုပ်ပေးတဲ့ personal automation agent** အဖြစ်လည်း သုံးကြပါတယ်။ Cron jobs တွေက သတ်မှတ်ထားတဲ့ အချိန်၊ interval, recurring schedule တွေအတိုင်း agent ကို wake လုပ်ပြီး အလုပ်တစ်ခုလုပ်ခိုင်းနိုင်တဲ့ mechanism ဖြစ်ပါတယ်။
 
-Use case	ဘာလုပ်တာလဲ	Beginner example
-Daily morning brief	မနက်တိုင်း news, calendar, tasks, inbox summary ပို့	“မနက် ၇ နာရီတိုင်း today plan ပြောပေး”
-Reminder / one-shot task	20 minutes later, tomorrow, next Monday စတဲ့ reminder	“20 မိနစ်နေရင် deployment check လုပ်ဖို့ remind”
-Weekly project report	GitHub/Slack/issues/status တွေ summarize	“တနင်္လာနေ့တိုင်း project progress summary ပို့”
-Health monitoring	server, website, service, bot status စစ်	“၁ နာရီတစ်ခါ API health check လုပ်”
-ChatOps alerting	result ကို Telegram/Slack/Discord channel ထဲပို့	“build fail ဖြစ်ရင် team channel ထဲ summary ပို့”
-Personal admin	calendar check, email digest, finance check, habit tracking	“ညတိုင်း မနက်ဖြန် meeting တွေ summarize”
-External trigger workflow	webhook ကနေ event ဝင်လာရင် agent အလုပ်လုပ်	“GitHub webhook ဝင်ရင် PR summary ထုတ်”
+Beginner အနေနဲ့ Cron jobs ကို ဒီလိုနားလည်လို့ရပါတယ်။
 
-Cron jobs အတွက် scheduling type သုံးမျိုးကို beginner အနေနဲ့ မှတ်ထားလို့ရပါတယ်။ --at က one-time job, --every က fixed interval, --cron က recurring cron expression ပါ။ Timezone လိုရင် --tz ထည့်နိုင်ပါတယ်။  ￼
+> “အချိန်ရောက်ရင် OpenClaw ကို message တစ်ခုပို့ပြီး agent ကို အလုပ်တစ်ခုလုပ်ခိုင်းတာ”
 
-# One-shot reminder
-openclaw cron add \
-  --name "Check deployment" \
-  --at "20m" \
-  --session main \
-  --message "Remind me to check the deployment status." \
-  --wake now
-# Daily morning brief
+ဥပမာ — မနက် ၇ နာရီတိုင်း today brief ပို့ခိုင်းတာ၊ တစ်နာရီတစ်ခါ server health စစ်ခိုင်းတာ၊ တနင်္လာနေ့တိုင်း weekly report ထုတ်ခိုင်းတာ စတဲ့ automation မျိုးတွေပါ။
+
+---
+
+## Cron Jobs ကို ဘယ်လိုအခြေအနေမှာသုံးမလဲ
+
+| Need | Use Cron? | Example |
+|---|---:|---|
+| မနက်တိုင်း summary လိုချင် | ✅ | Daily morning brief |
+| 20 minutes later reminder လိုချင် | ✅ | Deployment check reminder |
+| တစ်နာရီတစ်ခါ status စစ်ချင် | ✅ | API health check |
+| အပတ်တိုင်း report ထုတ်ချင် | ✅ | Weekly project report |
+| Event ဝင်လာမှ run ချင် | ⚠️ | Webhook / integration ပိုသင့်တော် |
+| အမြဲတမ်း context ကြည့်ပြီး လိုတာရှိရင် ပြောစေချင် | ⚠️ | Heartbeat ပိုသင့်တော် |
+
+---
+
+## Common Use Cases
+
+### 1. Daily Morning Brief
+
+မနက်တိုင်း ကိုယ့် calendar, tasks, unread messages, project priorities တွေကို summarize လုပ်ခိုင်းနိုင်ပါတယ်။
+
+```bash
 openclaw cron add \
   --name "Morning brief" \
   --cron "0 7 * * *" \
@@ -467,34 +476,318 @@ openclaw cron add \
   --session isolated \
   --message "Summarize today's calendar, unread important messages, and top priorities." \
   --announce
-# Weekly project report to Slack
+```
+
+**ဘယ်သူတွေသုံးသင့်လဲ**
+
+- Founder / manager
+- Developer lead
+- Busy professional
+- Personal productivity setup လုပ်ချင်သူ
+
+---
+
+### 2. One-shot Reminder
+
+တစ်ကြိမ်တည်း run မယ့် reminder မျိုးတွေကိုလည်း Cron job အနေနဲ့သုံးနိုင်ပါတယ်။
+
+```bash
+openclaw cron add \
+  --name "Check deployment" \
+  --at "20m" \
+  --session main \
+  --message "Remind me to check the deployment status." \
+  --wake now
+```
+
+**Use cases**
+
+- Deployment ပြီး 20 မိနစ်နေရင် status စစ်ရန်
+- Meeting မတိုင်ခင် preparation reminder
+- Backup ပြီးနောက် verification reminder
+- Long-running script ပြီးမပြီးပြန်စစ်ရန်
+
+---
+
+### 3. Weekly Project Report
+
+Project status, GitHub issues, PRs, Slack discussions, deployment notes တွေကို weekly summary ထုတ်ခိုင်းနိုင်ပါတယ်။
+
+```bash
 openclaw cron add \
   --name "Weekly project report" \
   --cron "0 9 * * 1" \
   --tz "Asia/Bangkok" \
   --session isolated \
   --message "Review project updates and prepare a weekly progress summary." \
+  --announce
+```
+
+**Output example**
+
+```text
+Weekly Project Summary
+
+1. Completed
+- Login flow refactor finished
+- Dashboard API caching merged
+
+2. In progress
+- Mobile layout fixes
+- Billing webhook testing
+
+3. Risks
+- Telegram channel auth still unstable
+- Two PRs need review before Friday
+
+4. Suggested next actions
+- Review PR #42
+- Confirm staging deploy checklist
+```
+
+---
+
+### 4. Server / API Health Monitoring
+
+OpenClaw ကို lightweight monitoring assistant အနေနဲ့ သုံးနိုင်ပါတယ်။ Cron job က API endpoint, server status, logs, uptime, disk usage စတာတွေကို စစ်ပြီး issue ရှိရင် channel ထဲပြန်ပို့နိုင်ပါတယ်။
+
+```bash
+openclaw cron add \
+  --name "API health check" \
+  --every "1h" \
+  --session isolated \
+  --message "Check the production API health endpoint and notify me if anything looks wrong." \
+  --announce
+```
+
+**Use cases**
+
+- Production API health check
+- Cron backup success/failure check
+- Disk space monitoring
+- SSL certificate expiry check
+- Website uptime check
+
+---
+
+### 5. ChatOps Alerts
+
+OpenClaw ကို Slack, Telegram, Discord စတဲ့ channel တွေနဲ့ချိတ်ထားရင် Cron job output ကို team channel ထဲပို့နိုင်ပါတယ်။
+
+```bash
+openclaw cron add \
+  --name "Daily engineering digest" \
+  --cron "0 18 * * 1-5" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "Prepare a short engineering digest for today: merged PRs, open blockers, and urgent follow-ups." \
   --announce \
   --channel slack \
   --to "channel:C1234567890"
+```
 
-Cron နဲ့ Heartbeat ကို မရောသင့်ပါဘူး။ Cron က precise timing / recurring jobs အတွက်ကောင်းပြီး, Heartbeat က main session ထဲမှာ periodic agent turn ပြေးစေပြီး attention လိုတဲ့အရာတွေကို surface လုပ်ဖို့ သင့်တော်ပါတယ်။  ￼
+**Good for**
 
-Beginner rule of thumb:
+- Engineering daily digest
+- Ops alerts
+- Deployment summaries
+- Incident follow-up reminders
+- Team standup preparation
 
-* “Every morning at 7 AM do X” → Cron သုံးပါ။
-* “20 minutes later remind me” → Cron သုံးပါ။
-* “အခါအားလျော်စွာ context ကြည့်ပြီး လိုတာရှိရင်ပြော” → Heartbeat သုံးပါ။
-* “A → B → C multi-step workflow with approval gates” → Task Flow / managed workflow pattern ကိုစဉ်းစားပါ။  ￼
+---
 
-Cron jobs တွေကို စစ်ဖို့ command တွေကဒီလိုပါ။
+### 6. Personal Admin Automation
 
+နေ့စဉ် admin tasks တွေကိုလည်း scheduled automation အနေနဲ့ ပြောင်းနိုင်ပါတယ်။
+
+**Examples**
+
+- ညတိုင်း မနက်ဖြန် meeting summary ပို့
+- Friday တိုင်း weekly reflection prompt ပို့
+- Month-end invoice reminder ပို့
+- Habit tracking reminder ပို့
+- Learning schedule reminder ပို့
+
+```bash
+openclaw cron add \
+  --name "Tomorrow planning" \
+  --cron "0 21 * * *" \
+  --tz "Asia/Bangkok" \
+  --session main \
+  --message "Help me plan tomorrow. Summarize tomorrow's meetings and suggest the top 3 priorities." \
+  --announce
+```
+
+---
+
+### 7. Content / Research Digest
+
+OpenClaw ကို research assistant အဖြစ် schedule လုပ်ထားနိုင်ပါတယ်။
+
+**Examples**
+
+- AI news daily digest
+- Competitor update weekly digest
+- GitHub trending repositories summary
+- Security vulnerability watch
+- Product launch monitoring
+
+```bash
+openclaw cron add \
+  --name "AI research digest" \
+  --cron "0 8 * * 1-5" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "Find and summarize the most important AI developer updates from the last 24 hours." \
+  --announce
+```
+
+---
+
+### 8. Developer Workflow Automation
+
+Developer တွေအတွက် Cron jobs က အလွန်အသုံးဝင်ပါတယ်။
+
+| Workflow | Example |
+|---|---|
+| PR review reminder | Open PRs ကိုနေ့တိုင်း summarize |
+| Dependency check | Weekly package updates စစ် |
+| Test status check | CI failures summarize |
+| Release prep | Friday release checklist remind |
+| Log review | Error logs daily summary |
+
+```bash
+openclaw cron add \
+  --name "Open PR review" \
+  --cron "0 10 * * 1-5" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "List open PRs that need my review and summarize the highest priority ones." \
+  --announce
+```
+
+---
+
+## Cron vs Heartbeat vs Task Flow
+
+Beginner တွေ မကြာခဏရောထွေးတတ်တဲ့ concept သုံးခုရှိပါတယ်။
+
+| Feature | ဘယ်အတွက်သုံးလဲ | Example |
+|---|---|---|
+| **Cron** | တိကျတဲ့အချိန် / recurring schedule | Every day at 7 AM |
+| **Heartbeat** | Periodic agent attention / context check | “လိုတာရှိရင် ကိုယ့်ကိုပြော” |
+| **Task Flow** | Multi-step workflow with approvals | Research → Draft → Review → Send |
+
+Rule of thumb:
+
+- **“At 7 AM every day, do X”** → Cron
+- **“Every 30 minutes, check X”** → Cron
+- **“Keep an eye on things and alert me if needed”** → Heartbeat
+- **“Do A, then B, then ask approval before C”** → Task Flow
+
+---
+
+## Useful Cron Commands
+
+```bash
+# List all cron jobs
 openclaw cron list
+
+# Show one job
 openclaw cron show <job-id>
+
+# See run history
 openclaw cron runs --id <job-id>
+
+# Edit a job
 openclaw cron edit <job-id>
 
-Cron jobs တွေက default အနေနဲ့ Gateway host ပေါ်မှာ persist လုပ်ထားပြီး manual edit ထက် openclaw cron add/edit ကိုသုံးတာ ပိုလုံခြုံပါတယ်။  ￼
+# Disable or remove jobs depending on CLI support
+openclaw cron disable <job-id>
+openclaw cron remove <job-id>
+```
+
+---
+
+## Beginner Best Practices
+
+1. **Start with one simple job**  
+   ပထမဆုံး daily reminder တစ်ခုကနေစပါ။ တစ်ခါတည်း complex automation မလုပ်ပါနဲ့။
+
+2. **Use clear messages**  
+   Cron message ကို vague မရေးပါနဲ့။ Agent ကို ဘာလုပ်ရမလဲ တိတိကျကျပြောပါ။
+
+   Good:
+
+   ```text
+   Summarize today's calendar and list the top 3 priorities.
+   ```
+
+   Bad:
+
+   ```text
+   Check things.
+   ```
+
+3. **Use isolated session for reports**  
+   Daily digest, weekly report, monitoring jobs တွေကို `--session isolated` နဲ့ run ခိုင်းတာ ပိုရှင်းပါတယ်။
+
+4. **Set timezone explicitly**  
+   Schedule မှားမသွားအောင် `--tz "Asia/Bangkok"` လို timezone ကိုထည့်ပါ။
+
+5. **Announce only useful outputs**  
+   Job တိုင်း channel ထဲ announce မလုပ်ပါနဲ့။ Noise များရင် user က ignore လုပ်လာပါတယ်။
+
+6. **Check run history when debugging**  
+   Job မ run ဘူးထင်ရင် `openclaw cron runs --id <job-id>` နဲ့ history စစ်ပါ။
+
+---
+
+## Practical Starter Ideas
+
+Beginner အနေနဲ့ အောက်က automation ၃ ခုကနေစရင် အကောင်းဆုံးပါ။
+
+### Starter 1 — Morning Brief
+
+```bash
+openclaw cron add \
+  --name "Morning brief" \
+  --cron "0 7 * * *" \
+  --tz "Asia/Bangkok" \
+  --session main \
+  --message "Give me a short morning brief with today's priorities." \
+  --announce
+```
+
+### Starter 2 — Evening Review
+
+```bash
+openclaw cron add \
+  --name "Evening review" \
+  --cron "0 21 * * *" \
+  --tz "Asia/Bangkok" \
+  --session main \
+  --message "Ask me to review what I completed today and help me plan tomorrow." \
+  --announce
+```
+
+### Starter 3 — Weekly Cleanup
+
+```bash
+openclaw cron add \
+  --name "Weekly cleanup" \
+  --cron "0 10 * * 6" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "Help me review unfinished tasks, stale PRs, and reminders for next week." \
+  --announce
+```
+
+---
+
+## Summary
+
+OpenClaw Cron jobs က OpenClaw ကို **passive chatbot** ကနေ **active scheduled assistant** အဖြစ်ပြောင်းပေးပါတယ်။ Beginner အတွက် အကောင်းဆုံးစတင်နည်းက simple reminder, morning brief, weekly report တို့လို low-risk jobs တွေကနေစတာပါ။ နောက်ပိုင်းမှာ monitoring, ChatOps, research digest, developer workflow automation, personal admin automation စတာတွေအထိ တစ်ဆင့်ချင်းတိုးချဲ့နိုင်ပါတယ်။
 
 ## Realworld scenarios၊ အမှားများဖြေရှင်းနည်းများ၊ နောက်ထပ်ဖတ်ရန် resource များ
 
@@ -530,6 +823,85 @@ Official Showcase က OpenClaw ကို real projects တွေမှာ ဘယ
 
 6. **Native Windows က မတည်ငြိမ်သလိုခံစားရတယ်**  
    ဒါက documentation နဲ့ကိုက်ညီပါတယ်။ Official Windows page က WSL2 ကိုပိုတည်ငြိမ်ပြီး full experience အတွက် recommend လုပ်ထားပါတယ်။ Native Windows မှာ CLI-only သို့မဟုတ် basic Gateway use လုပ်လို့ရပေမယ့် caveat များရှိပါတယ်။ 
+
+# 🔐 Security Best Practices — OpenClaw ကို လုံခြုံစွာ အသုံးပြုရန် လမ်းညွှန်
+
+OpenClaw က self-hosted AI gateway ဖြစ်တဲ့အတွက် flexibility အများကြီးရှိပေမယ့် security responsibility က user ဘက်မှာပိုများပါတယ်။
+
+## 🧠 Core Security Mindset
+- Your machine = your responsibility
+- Trusted personal assistant model
+- Untrusted users ကို direct access မပေးပါ
+- AI tools (exec, browser, file I/O) powerful ဖြစ်တယ်
+
+## ⚠️ Common Security Risks
+- Prompt Injection → wrong actions
+- Tool Abuse → system damage
+- Public Dashboard Exposure → full takeover
+- Shared Gateway → data leakage
+- Weak Auth → unauthorized access
+- Local File Access → secrets leak
+
+## 🛡️ Beginner Security Checklist
+
+### 1. Dashboard ကို Public မဖွင့်ပါ
+- ❌ Public IP
+- ✅ localhost / VPN / SSH tunnel
+
+### 2. Authentication Enable
+- strong password/token သုံးပါ
+
+### 3. Tools Control
+- exec, browser, file access ကို limit လုပ်ပါ
+
+### 4. Workspace Clean ထားပါ
+- secrets မထည့်ပါ
+- env variables သုံးပါ
+
+### 5. Channel Security
+- bot tokens secret
+- allowlist + mention gating
+
+### 6. Multi-Agent Isolation
+- workspace ခွဲသုံးပါ
+
+### 7. Config Validation
+```bash
+openclaw config validate
+openclaw doctor
+```
+
+### 8. Logs Monitoring
+```bash
+openclaw logs --follow
+```
+
+### 9. Cron Job Safety
+- sensitive tasks avoid
+- clean prompts
+
+### 10. Regular Audit
+```bash
+openclaw doctor
+openclaw status
+```
+
+## 🚨 Golden Rules
+- ❌ Public dashboard
+- ❌ Unknown users
+- ❌ Secrets in workspace
+
+- ✅ Localhost only
+- ✅ Strong auth
+- ✅ Monitoring
+
+## 🧭 Summary
+Security = Convenience + Control
+
+Start simple:
+1. Local setup
+2. Minimal tools
+3. Expand gradually
 
 **နောက်ထပ်ဖတ်ရန် အကြံပြု resource list**
 
