@@ -75,7 +75,7 @@ OpenClaw ရဲ့ agent runtime က default အနေနဲ့ `~/.openclaw/wor
 OpenClaw configuration က JSON5 ဖြစ်ပြီး comments/trailing commas ကိုလည်းလက်ခံနိုင်ပါတယ်။ Unknown key, wrong type, invalid value ရှိရင် Gateway က refuse to start လုပ်နိုင်ပါတယ်။ ဒါကြောင့် beginner ဖြစ်လေလေ `openclaw config validate` နဲ့ `openclaw doctor` ကိုကြိုးစားသုံးသင့်ပါတယ်။ Control UI ကလည်း live schema ကိုဖတ်ပြီး config form render လုပ်ပေးပါတယ်။ 
 Control UI / Dashboard က admin surface ဖြစ်တာကြောင့် public internet ပေါ် တိုက်ရိုက်ဖွင့်မထားသင့်ပါဘူး။ Official docs က localhost, Tailscale Serve, သို့မဟုတ် SSH tunnel ကို prefer လုပ်ဖို့ ပြောထားပါတယ်။ 
 
-## OS အလိုက် တပ်ဆင်ရန် လက်တွေ့လမ်းညွှန်
+## OS အလိုက် installation setup လက်တွေ့လမ်းညွှန်
 
 အောက်ကဇယားက OS အလိုက် recommended install path ကို အရင်ကြည့်ပြီး, မိမိ environment မသေချာပါက အဲဒီ recommended path ကိုပဲသွားပါ။ Windows native, Windows WSL2, macOS CLI, macOS app alternative, Linux/headless အားလုံးကို ရွေးချယ်စရာအဖြစ်ပြထားပါတယ်။ 
 
@@ -410,7 +410,7 @@ openclaw agent --agent main --message "give me a greeting"
 Hello from your custom skill!
 ```
 
-**လExercise 5 — Plugin တစ်ခု ထည့်မယ်**
+**Exercise 5 — Plugin တစ်ခု ထည့်မယ်**
 
 Plugin က OpenClaw ကို channel/provider/tool/skill/speech စတာတွေအထိ တိုးချဲ့နိုင်တဲ့ package မျိုးဖြစ်ပါတယ်။ Official plugins quick-start docs က `@openclaw/voice-call` ကို example အဖြစ် တိုက်ရိုက်သုံးထားပါတယ်။ 
 
@@ -434,6 +434,65 @@ openclaw config validate
 - restart ပြီးနောက် gateway က plugin registry ကို load လုပ်ထားမယ် 
 
 plugin install failure ဖြစ်ပြီး config invalid ဖြစ်နေလျှင် docs က `openclaw doctor --fix` နဲ့ `openclaw plugins doctor` ကိုသုံးဖို့ အချက်ပေးထားပါတယ်။ 
+
+## လူတွေ OpenClaw ကို လက်တွေ့ဘယ်လိုသုံးကြလဲ — Cron Jobs / Scheduled Automation Use Cases
+
+OpenClaw ကို လူတွေ chatbot တစ်ခုလိုပဲမဟုတ်ဘဲ အချိန်အလိုက် အလုပ်လုပ်ပေးတဲ့ personal automation agent အဖြစ်လည်း သုံးကြပါတယ်။ Official docs အရ Cron က Gateway ထဲမှာ run တဲ့ built-in scheduler ဖြစ်ပြီး jobs တွေကို persist လုပ်ထားနိုင်သလို, သတ်မှတ်ချိန်ရောက်ရင် agent ကို wake လုပ်ပြီး output ကို chat channel သို့ webhook endpoint ထဲပြန်ပို့နိုင်ပါတယ်။  ￼
+
+Use case	ဘာလုပ်တာလဲ	Beginner example
+Daily morning brief	မနက်တိုင်း news, calendar, tasks, inbox summary ပို့	“မနက် ၇ နာရီတိုင်း today plan ပြောပေး”
+Reminder / one-shot task	20 minutes later, tomorrow, next Monday စတဲ့ reminder	“20 မိနစ်နေရင် deployment check လုပ်ဖို့ remind”
+Weekly project report	GitHub/Slack/issues/status တွေ summarize	“တနင်္လာနေ့တိုင်း project progress summary ပို့”
+Health monitoring	server, website, service, bot status စစ်	“၁ နာရီတစ်ခါ API health check လုပ်”
+ChatOps alerting	result ကို Telegram/Slack/Discord channel ထဲပို့	“build fail ဖြစ်ရင် team channel ထဲ summary ပို့”
+Personal admin	calendar check, email digest, finance check, habit tracking	“ညတိုင်း မနက်ဖြန် meeting တွေ summarize”
+External trigger workflow	webhook ကနေ event ဝင်လာရင် agent အလုပ်လုပ်	“GitHub webhook ဝင်ရင် PR summary ထုတ်”
+
+Cron jobs အတွက် scheduling type သုံးမျိုးကို beginner အနေနဲ့ မှတ်ထားလို့ရပါတယ်။ --at က one-time job, --every က fixed interval, --cron က recurring cron expression ပါ။ Timezone လိုရင် --tz ထည့်နိုင်ပါတယ်။  ￼
+
+# One-shot reminder
+openclaw cron add \
+  --name "Check deployment" \
+  --at "20m" \
+  --session main \
+  --message "Remind me to check the deployment status." \
+  --wake now
+# Daily morning brief
+openclaw cron add \
+  --name "Morning brief" \
+  --cron "0 7 * * *" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "Summarize today's calendar, unread important messages, and top priorities." \
+  --announce
+# Weekly project report to Slack
+openclaw cron add \
+  --name "Weekly project report" \
+  --cron "0 9 * * 1" \
+  --tz "Asia/Bangkok" \
+  --session isolated \
+  --message "Review project updates and prepare a weekly progress summary." \
+  --announce \
+  --channel slack \
+  --to "channel:C1234567890"
+
+Cron နဲ့ Heartbeat ကို မရောသင့်ပါဘူး။ Cron က precise timing / recurring jobs အတွက်ကောင်းပြီး, Heartbeat က main session ထဲမှာ periodic agent turn ပြေးစေပြီး attention လိုတဲ့အရာတွေကို surface လုပ်ဖို့ သင့်တော်ပါတယ်။  ￼
+
+Beginner rule of thumb:
+
+* “Every morning at 7 AM do X” → Cron သုံးပါ။
+* “20 minutes later remind me” → Cron သုံးပါ။
+* “အခါအားလျော်စွာ context ကြည့်ပြီး လိုတာရှိရင်ပြော” → Heartbeat သုံးပါ။
+* “A → B → C multi-step workflow with approval gates” → Task Flow / managed workflow pattern ကိုစဉ်းစားပါ။  ￼
+
+Cron jobs တွေကို စစ်ဖို့ command တွေကဒီလိုပါ။
+
+openclaw cron list
+openclaw cron show <job-id>
+openclaw cron runs --id <job-id>
+openclaw cron edit <job-id>
+
+Cron jobs တွေက default အနေနဲ့ Gateway host ပေါ်မှာ persist လုပ်ထားပြီး manual edit ထက် openclaw cron add/edit ကိုသုံးတာ ပိုလုံခြုံပါတယ်။  ￼
 
 ## Realworld scenarios၊ အမှားများဖြေရှင်းနည်းများ၊ နောက်ထပ်ဖတ်ရန် resource များ
 
@@ -487,4 +546,4 @@ Official doc: https://docs.openclaw.ai/start/getting-started
 - **macOS app docs** — menu-bar app, permissions, local/remote gateway attachment ကိုသုံးချင်ရင်။ 
 - **GitHub repository** — source code, releases, issues, docs directory, community activity ကိုတိုက်ရိုက်ကြည့်ချင်ရင်။ 
 
-အဆုံးသတ်အနေနဲ့, beginner တစ်ယောက်အတွက် OpenClaw ကိုလေ့လာရာမှာ အရေးကြီးဆုံးအချက်က **feature များလို့ မကြောက်ပါနဲ့** ဆိုတာပါ။ ပထမနေ့မှာ installer → onboarding → dashboard → first chat လောက်ပဲအောင်အောင်လုပ်ပါ။ ဒုတိယအဆင့်မှာ `doctor`, `status`, `config` ကိုလေ့လာပါ။ တတိယအဆင့်မှာ agent, skill, plugin, channel ကိုတစ်ခုချင်းထည့်ပါ။ ဒီလိုသွားရင် OpenClaw ကို “ကြီးမားလှတဲ့ platform” လို့မခံစားဘဲ “တစ်ဆင့်ချင်းစီတက်သွားလို့ရတဲ့ toolkit” လို့မြင်လာပါလိမ့်မယ်။ 
+အဆုံးသတ်အနေနဲ့, beginner တစ်ယောက်အတွက် OpenClaw ကိုလေ့လာရာမှာ အရေးကြီးဆုံးအချက်က **feature များလို့ မကြောက်ပါနဲ့** ဆိုတာပါ။ ပထမနေ့မှာ installer → onboarding → dashboard → first chat လောက်ပဲရအောင်လုပ်ပါ။ ဒုတိယအဆင့်မှာ `doctor`, `status`, `config` ကိုလေ့လာပါ။ တတိယအဆင့်မှာ agent, skill, plugin, channel ကိုတစ်ခုချင်းထည့်ပါ။ ဒီလိုသွားရင် OpenClaw ကို “ကြီးမားလှတဲ့ platform” လို့မခံစားဘဲ “တစ်ဆင့်ချင်းစီတက်သွားလို့ရတဲ့ toolkit” လို့မြင်လာပါလိမ့်မယ်။ 
