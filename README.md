@@ -2,7 +2,7 @@
 
 <img width="1254" height="1254" alt="image" src="https://github.com/user-attachments/assets/79e11c7c-f1d6-4e9d-9cad-1fdd3d20c6bf" />
 
-## အမှုဆောင်အကျဉ်းချုပ်
+## အကျဉ်းချုပ်
 
 OpenClaw က သင့်စက်ပေါ်မှာ run လုပ်တဲ့ self-hosted AI assistant gateway ဖြစ်ပါတယ်။ အဓိကအကြောင်းက WhatsApp, Telegram, Slack, Discord, iMessage စတဲ့ chat channel တွေကို AI agent နဲ့ချိတ်ပေးပြီး, Gateway process တစ်ခုက sessions, routing, channel connections, dashboard access တို့ကို ထိန်းချုပ်ပေးတာပါ။ ဆိုလိုတာက “chatbot app တစ်ခု” ထက်ပိုပြီး “သင့် messaging app များနဲ့ AI agent ကြားက control center” လို့ နားလည်ရင် ပိုမှန်ပါတယ်။ 
 
@@ -202,6 +202,182 @@ export PATH="$(npm prefix -g)/bin:$PATH"
 ```bash
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install -g openclaw@latest
 ```
+# 💬 Discord Channel Setup — OpenClaw Guide
+
+## Overview
+OpenClaw ကို Discord နဲ့ချိတ်လိုက်ရင် AI assistant ကို Discord DM နဲ့ Server channels ထဲကနေ တိုက်ရိုက်အသုံးပြုနိုင်ပါတယ်။
+
+---
+
+## 🧠 What You Can Do
+- DM chat with AI
+- Channel-based AI sessions
+- Slash commands support
+- Automation posting
+- Team workflows
+
+---
+
+## ⚙️ Setup Steps
+
+### 1. Create Discord Bot
+- Go to Discord Developer Portal
+- New Application → Bot → Add Bot
+- Copy Bot Token
+
+### 2. Enable Intents
+- Message Content Intent
+- Server Members Intent
+
+### 3. Invite Bot
+Scopes:
+- bot
+- applications.commands
+
+Permissions:
+- Send Messages
+- Read Message History
+- View Channels
+
+---
+
+### 4. Configure OpenClaw
+
+```bash
+export DISCORD_BOT_TOKEN="YOUR_TOKEN"
+
+openclaw config set channels.discord.token   --ref-provider default   --ref-source env   --ref-id DISCORD_BOT_TOKEN
+
+openclaw config set channels.discord.enabled true
+```
+
+---
+
+### 5. Run Gateway
+
+```bash
+openclaw gateway restart
+```
+
+---
+
+### 6. Pairing
+
+```bash
+openclaw pairing approve discord <code>
+```
+
+---
+
+## 🧪 Test
+
+Send in Discord:
+
+```
+Reply with OPENCLAW-OK
+```
+
+---
+
+## 🏢 Server Mode
+
+- DM = main session
+- Channel = separate session
+
+---
+
+## 🔒 Security
+
+- Keep token secret
+- Avoid admin permissions
+- Use allowlist
+
+---
+
+## 🧭 Summary
+
+OpenClaw + Discord = AI assistant in your chat workspace
+
+# 📱 Telegram Channel Setup — OpenClaw Guide
+
+## Overview
+OpenClaw ကို Telegram နဲ့ချိတ်လိုက်ရင် AI assistant ကို mobile ထဲကနေ တိုက်ရိုက်အသုံးပြုနိုင်ပါတယ်။
+
+---
+
+## 🧠 What You Can Do
+- DM chat with AI
+- Group AI assistant
+- Automation alerts
+- Mobile-first control
+
+---
+
+## ⚙️ Setup Steps
+
+### 1. Create Bot (BotFather)
+- Telegram → @BotFather
+- /newbot
+- Copy Bot Token
+
+---
+
+### 2. Configure OpenClaw
+
+```bash
+export TELEGRAM_BOT_TOKEN="YOUR_TOKEN"
+
+openclaw config set channels.telegram.token   --ref-provider default   --ref-source env   --ref-id TELEGRAM_BOT_TOKEN
+
+openclaw config set channels.telegram.enabled true
+```
+
+---
+
+### 3. Run Gateway
+
+```bash
+openclaw gateway restart
+```
+
+---
+
+### 4. Pairing
+
+```bash
+openclaw pairing approve telegram <code>
+```
+
+---
+
+## 🧪 Test
+
+Send in Telegram:
+
+```
+Reply with OPENCLAW-OK
+```
+
+---
+
+## 🏢 Behavior
+
+- DM = main session
+- Group = separate session
+
+---
+
+## 🔒 Security
+
+- Keep token secret
+- Avoid public groups
+- Use allowlist
+
+---
+
+## 🧭 Summary
+
+OpenClaw + Telegram = AI assistant in your phone
 
 ## နေ့စဉ်သုံး workflow နဲ့ အရေးကြီး command များ
 
