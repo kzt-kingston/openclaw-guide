@@ -903,6 +903,100 @@ Start simple:
 2. Minimal tools
 3. Expand gradually
 
+# Minimum Hardware Requirement နှင့် Free အသုံးပြုနည်း — Ollama / Free API လမ်းကြောင်း
+
+OpenClaw ကိုသုံးဖို့ hardware requirement နှစ်မျိုးခွဲနားလည်ရပါမယ်။ ပထမတစ်မျိုးက **OpenClaw Gateway ကို run ဖို့လိုတဲ့ requirement** ဖြစ်ပြီး, ဒုတိယတစ်မျိုးက **AI model ကို ကိုယ့်စက်ထဲမှာ local run ဖို့လိုတဲ့ requirement** ဖြစ်ပါတယ်။
+
+## Hardware Requirement အတိုချုပ်
+
+| Setup type | Minimum | Recommended | ဘယ်သူအတွက်သင့်လဲ |
+|---|---:|---:|---|
+| Gateway only + hosted API | 2 vCPU, 4 GB RAM | 4 vCPU, 8 GB RAM | Beginner |
+| Gateway + Ollama small | 4-core CPU, 8–16 GB RAM | 16–32 GB RAM | Free testing |
+| Gateway + 7B/8B model | 16 GB RAM | 32 GB RAM / GPU | Daily use |
+
+---
+
+## Free အသုံးပြုနည်း (၃ လမ်း)
+
+### 1. Ollama Local Model
+
+```bash
+ollama pull llama3.1:8b
+ollama run llama3.1:8b
+```
+
+OpenClaw နဲ့စမ်း:
+
+```bash
+openclaw infer chat --model ollama/llama3.1:8b --message "Hello"
+```
+
+**Pros**
+- Free (no API cost)
+- Private
+
+**Cons**
+- Slower
+- Lower quality
+
+---
+
+### 2. Free-tier API
+
+```bash
+export OPENROUTER_API_KEY="your-key"
+openclaw onboard
+```
+
+**Pros**
+- Easy
+- Better quality
+
+**Cons**
+- Rate limit
+- Not fully private
+
+---
+
+### 3. Hybrid Setup
+
+| Task | Model |
+|---|---|
+| Reminder | Ollama |
+| Chat | Ollama |
+| Complex tasks | Hosted model |
+
+---
+
+## Beginner Setup Example
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+openclaw onboard --install-daemon
+ollama pull llama3.1:8b
+openclaw doctor
+openclaw dashboard
+```
+
+---
+
+## Recommendation
+
+1. Start with Ollama (free)
+2. Use small model first
+3. Add API later if needed
+4. Use hybrid approach
+
+---
+
+## Summary
+
+- Gateway = light requirement
+- AI model = heavy requirement
+- Free = possible with Ollama
+- Best = hybrid approach
+
 **နောက်ထပ်ဖတ်ရန် အကြံပြု resource list**
 
 Official doc: https://docs.openclaw.ai/start/getting-started
