@@ -1,5 +1,7 @@
 # OpenClaw ကို စတင်အသုံးပြုရန် Beginner Friendly လက်တွေ့လမ်းညွှန်
 
+<img width="1254" height="1254" alt="image" src="https://github.com/user-attachments/assets/79e11c7c-f1d6-4e9d-9cad-1fdd3d20c6bf" />
+
 ## အမှုဆောင်အကျဉ်းချုပ်
 
 OpenClaw က သင့်စက်ပေါ်မှာ run လုပ်တဲ့ self-hosted AI assistant gateway ဖြစ်ပါတယ်။ အဓိကအကြောင်းက WhatsApp, Telegram, Slack, Discord, iMessage စတဲ့ chat channel တွေကို AI agent နဲ့ချိတ်ပေးပြီး, Gateway process တစ်ခုက sessions, routing, channel connections, dashboard access တို့ကို ထိန်းချုပ်ပေးတာပါ။ ဆိုလိုတာက “chatbot app တစ်ခု” ထက်ပိုပြီး “သင့် messaging app များနဲ့ AI agent ကြားက control center” လို့ နားလည်ရင် ပိုမှန်ပါတယ်။ 
