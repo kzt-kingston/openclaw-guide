@@ -1,1193 +1,384 @@
-# OpenClaw ကို စတင်အသုံးပြုရန် Beginner Friendly လက်တွေ့လမ်းညွှန်
+# OpenClaw အသုံးပြုသူ လက်တွေ့လမ်းညွှန် (Beginner-Friendly Guide)
 
 <img width="1254" height="1254" alt="image" src="https://github.com/user-attachments/assets/79e11c7c-f1d6-4e9d-9cad-1fdd3d20c6bf" />
 
-## အကျဉ်းချုပ်
-
-OpenClaw က သင့်စက်ပေါ်မှာ run လုပ်တဲ့ self-hosted AI assistant gateway ဖြစ်ပါတယ်။ အဓိကအကြောင်းက WhatsApp, Telegram, Slack, Discord, iMessage စတဲ့ chat channel တွေကို AI agent နဲ့ချိတ်ပေးပြီး, Gateway process တစ်ခုက sessions, routing, channel connections, dashboard access တို့ကို ထိန်းချုပ်ပေးတာပါ။ ဆိုလိုတာက “chatbot app တစ်ခု” ထက်ပိုပြီး “သင့် messaging app များနဲ့ AI agent ကြားက control center” လို့ နားလည်ရင် ပိုမှန်ပါတယ်။ 
-
-အစပြုသူအတွက် အကောင်းဆုံး စတင်လမ်းကြောင်းက installer script ကိုသုံးပြီး `openclaw onboard` နဲ့ onboarding ပြီးတာနဲ့ `openclaw dashboard` ကနေ browser chat စကြည့်ခြင်းပါ။ Official docs ကလည်း installer script က OS ကို detect လုပ်ပေးပြီး Node လိုအပ်ရင် install ပေးကာ onboarding ကိုပါ စတင်ပေးတယ်လို့ ပြထားပါတယ်။ ပထမဆုံး run မှာ Node 24 ကို recommend လုပ်ထားပြီး Node 22.14+ ကိုလည်း support လုပ်ထားပါတယ်။ 
-
-Windows သုံးသူဆိုရင် WSL2 လမ်းကြောင်းကိုရွေးရင် ပိုတည်ငြိမ်ပါတယ်။ macOS နဲ့ Linux သုံးသူတွေက installer script နဲ့ ရိုးရိုးစတင်လို့ရပါတယ်။ Native Windows CLI/Gateway flow က support ရှိပေမယ့် official docs က WSL2 ကို “more stable” လို့ တိုက်ရိုက် recommend လုပ်ထားပါတယ်။ 
-
-Beginner အတွက် ပိုလွယ်ကူတဲ့ recommendation က hosted model/provider နဲ့စတာပါ။ Official docs ကလည်း best quality/security အတွက် strongest latest-generation model ကိုသုံးဖို့ ပြောထားပြီး, local model setup က context ကြီးကြီးနဲ့ prompt-injection defenses ကောင်းကောင်းလိုတာကြောင့် hardware demand မြင့်တတ်တယ်လို့ သတိပေးထားပါတယ်။ 
-
-ပထမအပတ်မှာ သင်အရင်ကျွမ်းသင့်တဲ့ command ခြောက်ခုက `openclaw onboard`, `openclaw dashboard`, `openclaw status`, `openclaw health`, `openclaw doctor`, `openclaw config` ပါ။ အရေးကြီးဆုံး mindset က “တစ်ခုခု မပြန်ဘူးဆိုရင် reconnect လုပ်မယ်” မဟုတ်ဘဲ “status → gateway status → logs → doctor → channels status --probe” ဆိုတဲ့ ladder အတိုင်း စစ်မယ်” လို့ထားပါ။ 
-
-မြန်မြန်ရွေးမယ်ဆိုရင် ဒီအတိုင်းသွားလို့ရပါတယ်။
-
-1. **Windows** ဆိုရင် **WSL2** ဖြင့်စပါ။ 
-2. **macOS / Linux** ဆိုရင် **installer script** နဲ့စပါ။ 
-3. **Local model** မဟုတ်ဘဲ **hosted provider + API key** နဲ့ပထမဆုံး chat စပါ။ 
-4. **Dashboard** ထဲက browser chat မှာ ပထမဆုံးအဖြေကို စမ်းပါ။ 
-5. Debugging လုပ်ရာမှာ **doctor** ကိုအဓိက tool လို့ စိတ်ထဲထားပါ။ 
-
-## OpenClaw ဆိုတာဘာလဲ
-
-OpenClaw ကို ရိုးရိုးလေး နားလည်မယ်ဆိုရင် ဒီလိုပါ။ သင်က Telegram တို့ WhatsApp တို့ကနေ message ပို့တယ်။ အဲဒီ message ကို OpenClaw Gateway က လက်ခံတယ်။ ပြီးရင် agent runtime က workspace, skills, tools, model provider တို့ကိုသုံးပြီး အဖြေထုတ်တယ်။ လိုအပ်ရင် browser, exec, web search, file I/O, messaging စတဲ့ tool တွေကို ခေါ်သုံးတယ်။ နောက်ဆုံး အဖြေကိုမူလ channel ထဲပြန်ပို့ပေးတယ်။ Routing က model က စိတ်ကြိုက်ရွေးတာမဟုတ်ဘဲ host configuration အတိုင်း deterministic ဖြစ်ပါတယ်။ 
-
-အောက်ကဇယားက official docs တွေထဲက အခြေခံ component တွေကို beginner-friendly အနေနဲ့ ပြန်စီထားတာပါ။ 
-
-| အစိတ်အပိုင်း | အဓိပ္ပါယ် | Beginner အတွက် အဓိကမှတ်ချက် |
-|---|---|---|
-| **Gateway** | အဓိက daemon/process | ဒီကောင်မရှိရင် bot ကအလုပ်လုပ်မှာမဟုတ်ဘူး |
-| **Agent** | AI က reason လုပ်ပြီး action လုပ်တဲ့ runtime | “brain” လို့ ယူဆလို့ရတယ် |
-| **Channel** | Telegram, WhatsApp, Slack စတဲ့ message ဝင်ထွက်လမ်းကြောင်း | Message ဘယ်ကဝင်တယ်၊ ဘယ်ကိုပြန်ပို့မလဲ ဆိုတာကို ဆုံးဖြတ်ပေးတယ် |
-| **Tool** | `exec`, `browser`, `web_search`, `message` စတဲ့ action function | OpenClaw က “စာပြော” ခြင်းထက် “အလုပ်လုပ်” ခြင်းကို ဖြစ်စေတဲ့အရာ |
-| **Skill** | `SKILL.md` အခြေပြု လမ်းညွှန် | AI ကို ဘယ်အချိန် ဘာ tool သုံးသင့်လဲ သင်ပေးတယ် |
-| **Plugin** | channel, provider, tool, skill စတာတွေကို တိုးချဲ့ပေးတဲ့ package | Core မပါသေးတဲ့ capability ကိုထည့်တယ် |
-| **Workspace** | agent အလုပ်လုပ်မယ့် folder | notes, skills, persona files, bootstrap files တွေရှိတတ်တယ် |
-| **Config** | `~/.openclaw/openclaw.json` | models, channels, auth, security, tools policy စတာတွေထားရာ |
-
-OpenClaw ရဲ့ မျက်နှာချင်းဆိုင် philosophy ကလည်း ရှင်းပါတယ်။ “Your machine. Your rules.” ဆိုတဲ့ self-hosted approach ကိုတည်ဆောက်ထားပြီး chat apps အများကြီးကို Gateway တစ်ခုနဲ့ တပြိုင်နက်ဆက်နိုင်အောင် လုပ်ထားပါတယ်။ ဒါကြောင့် privacy/control လိုချင်သူ, SaaS assistant ထက် ကိုယ့် infrastructure ပေါ်မှာ run ချင်သူ, multi-channel workflow လုပ်ချင်သူတွေအတွက် အသင့်တော်ပါတယ်။ 
-
-## Architecture နဲ့ အလုပ်လုပ်ပုံ
-
-OpenClaw architecture မှာ Gateway က single source of truth ဖြစ်ပါတယ်။ Gateway က provider connections ကိုထိန်း, WebSocket API ပေး, events ပို့, health/presence/routing/state ကိုတစ်နေရာတည်းမှာဟန်ချက်ညီအောင် ထိန်းပါတယ်။ Clients အားလုံး—CLI, web UI, macOS app, iOS/Android nodes—က ဒီ Gateway ကို WebSocket နဲ့ ချိတ်ပါတယ်။ 
-
-```mermaid
-flowchart LR
-    U[User<br/>Telegram / WhatsApp / Slack / WebChat] --> C[Channel]
-    C --> G[OpenClaw Gateway]
-    G --> A[Agent Runtime]
-    A --> W[Workspace Files<br/>AGENTS.md SOUL.md USER.md]
-    A --> T[Tools<br/>exec browser web_search read/write]
-    A --> S[Skills<br/>SKILL.md]
-    G --> D[Dashboard / Control UI]
-    P[Plugins] --> G
-    CFG[~/.openclaw/openclaw.json] --> G
-```
-
-ဒီ diagram အရ beginner တစ်ယောက်အနေနဲ့ အဓိကသိထားသင့်တဲ့အချက် သုံးခုရှိပါတယ်။ ပထမတစ်ခုက **Gateway အလုပ်မလုပ်ရင် တခြားအရာတွေက အလုပ်မဖြစ်နိုင်** ပါဘူး။ ဒုတိယက **agent က workspace file တွေကို context အဖြစ်သုံးတယ်**။ တတိယက **tools/skills/plugins** က OpenClaw ကို “တိုးချဲ့နိုင်တဲ့ automation system” ဖြစ်စေပါတယ်။ 
-
-OpenClaw ရဲ့ agent runtime က default အနေနဲ့ `~/.openclaw/workspace` ကို working directory အဖြစ်သုံးပြီး `AGENTS.md`, `SOUL.md`, `TOOLS.md`, `BOOTSTRAP.md`, `IDENTITY.md`, `USER.md` စတဲ့ user-editable files တွေကို session အသစ်ရဲ့ ပထမ turn မှာ context ထဲ inject လုပ်ပေးပါတယ်။ Multi-agent setup သုံးရင် agent တစ်ခုစီမှာ သီးသန့် workspace, state directory, sessions store ရှိပြီး inbound routing ကို bindings နဲ့ ဆုံးဖြတ်ပါတယ်။ 
-
-အောက်ကဇယားက daily use မှာ မကြာခဏပြန်ကြည့်ရတဲ့ path နဲ့ behavior တွေကို စုထားတာပါ။ 
-
-| Tool / Path | Default / Behavior | Beginner မှတ်ရန် |
-|---|---|---|
-| **Config file** | `~/.openclaw/openclaw.json` | JSON5 format; file မရှိလည်း safe defaults နဲ့ run တတ် |
-| **Workspace** | `~/.openclaw/workspace` | skills, prompts, persona files ထားရန် |
-| **Dashboard URL** | `http://127.0.0.1:18789/` | local admin UI; public exposure မလုပ်သင့် |
-| **Gateway port** | default `18789` | onboarding မှာ ပြောင်းလို့ရ |
-| **Config reload** | file save လုပ်တာနဲ့ Gateway က watch/apply လုပ်တတ် | တချို့ setting တွေက restart လိုနိုင်သေး |
-| **DM policy default** | `pairing` | မသိသေးတဲ့ sender ကို code approve လုပ်ရတတ် |
-| **Group policy default** | `allowlist` | group ထဲမှာ bot မပြန်ရင် allowlist / mention gating ကို စစ် |
-
-OpenClaw configuration က JSON5 ဖြစ်ပြီး comments/trailing commas ကိုလည်းလက်ခံနိုင်ပါတယ်။ Unknown key, wrong type, invalid value ရှိရင် Gateway က refuse to start လုပ်နိုင်ပါတယ်။ ဒါကြောင့် beginner ဖြစ်လေလေ `openclaw config validate` နဲ့ `openclaw doctor` ကိုကြိုးစားသုံးသင့်ပါတယ်။ Control UI ကလည်း live schema ကိုဖတ်ပြီး config form render လုပ်ပေးပါတယ်။ 
-Control UI / Dashboard က admin surface ဖြစ်တာကြောင့် public internet ပေါ် တိုက်ရိုက်ဖွင့်မထားသင့်ပါဘူး။ Official docs က localhost, Tailscale Serve, သို့မဟုတ် SSH tunnel ကို prefer လုပ်ဖို့ ပြောထားပါတယ်။ 
-
-## OS အလိုက် installation setup လက်တွေ့လမ်းညွှန်
-
-အောက်ကဇယားက OS အလိုက် recommended install path ကို အရင်ကြည့်ပြီး, မိမိ environment မသေချာပါက အဲဒီ recommended path ကိုပဲသွားပါ။ Windows native, Windows WSL2, macOS CLI, macOS app alternative, Linux/headless အားလုံးကို ရွေးချယ်စရာအဖြစ်ပြထားပါတယ်။ 
-
-| OS | Recommended path | Install command | Auto-start / service | မှတ်ချက် |
-|---|---|---|---|---|
-| **Windows** | **WSL2** | `wsl --install` → WSL ထဲမှာ `curl -fsSL https://openclaw.ai/install.sh | bash` | WSL ထဲ systemd user service | အပြည့်စုံဆုံး compatibility |
-| **Windows** | Native PowerShell | `iwr -useb https://openclaw.ai/install.ps1 | iex` | Scheduled Task, denied ဖြစ်ရင် Startup-folder fallback | core CLI/Gateway use okay, သို့သော် WSL2 ပိုတည်ငြိမ် |
-| **macOS** | Installer script | `curl -fsSL https://openclaw.ai/install.sh | bash` | LaunchAgent | beginner အတွက် အလွယ်ဆုံး |
-| **macOS** | CLI + OpenClaw.app | CLI install အရင်လို | app က local Gateway ကို manage/attach လုပ်နိုင် | app က Node/Gateway bundle မပါတော့လို့ CLI လိုတယ် |
-| **Linux** | Installer script | `curl -fsSL https://openclaw.ai/install.sh | bash` | systemd user service | server/headless မှာကောင်း |
-| **Any OS** | npm/pnpm/bun alternative | `npm install -g openclaw@latest` စသည် | OS ပေါ်မူတည် | Node ကိုကိုယ်တိုင် manage လုပ်ပြီးသားဆိုရင် okay |
-
-**Windows WSL2 လမ်းကြောင်း**  
-ဒီလမ်းက official docs အရ recommended ဖြစ်ပါတယ်။ ပထမဆုံး PowerShell ကို Administrator နဲ့ဖွင့်ပြီး WSL2 ကို install လုပ်ပါ။ Microsoft official docs က `wsl --install` command ကို recommended လုပ်ထားပါတယ်။ 
-
-```powershell
-wsl --install
-wsl --list --verbose
-```
-
-WSL distro (ဥပမာ Ubuntu) ထဲဝင်ပြီး OpenClaw install လုပ်ပါ။ Official install docs အရ installer script က OS detect လုပ်ပေးပြီး Node လိုအပ်ရင်ထည့်ပေးနိုင်ပါတယ်။ 
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-openclaw --version
-openclaw doctor
-openclaw gateway status
-```
-
-WSL2 ကို reboot/login မရှိဘဲ background မှာဆက် run စေချင်ရင် linger enable လုပ်ပြီး, Windows boot နဲ့ WSL ကိုဆွဲတင်ဖို့ Scheduled Task သုံးနိုင်ပါတယ်။ ဒီ step က headless / always-on setup အတွက်သာ လိုအပ်ပါတယ်။ 
-
-```bash
-sudo loginctl enable-linger "$(whoami)"
-```
-
-```powershell
-schtasks /create /tn "WSL Boot" /tr "wsl.exe -d Ubuntu --exec /bin/true" /sc onstart /ru SYSTEM
-```
-
-**Windows native PowerShell alternative**  
-Native Windows path ကိုသုံးမယ်ဆိုရင် install command က အောက်ကနည်းပါ။ Official docs က core CLI use နဲ့ basic Gateway use အတွက် okay လို့ပြောပေမယ့် WSL2 ကိုပဲ prefer လုပ်ထားပါတယ်။ 
-
-```powershell
-iwr -useb https://openclaw.ai/install.ps1 | iex
-openclaw onboard --install-daemon
-openclaw --version
-openclaw doctor
-openclaw gateway status --json
-```
-
-Native Windows မှာ managed startup မလိုဘဲ CLI-only စမ်းချင်ရင် health requirement ကိုကျော်သွားဖို့ `--skip-health` သုံးနိုင်ပါတယ်။ Scheduled Task creation deny ဖြစ်ရင် OpenClaw က Startup-folder login item fallback ကို သုံးတတ်ပါတယ်။ 
-
-```powershell
-openclaw onboard --non-interactive --skip-health
-openclaw gateway run
-```
-
-**macOS လမ်းကြောင်း**  
-macOS မှာ beginner အတွက် အလွယ်ဆုံးနည်းက installer script ပါ။ ပြီးရင် onboarding wizard ကို run လုပ်ပြီး LaunchAgent install လုပ်ခိုင်းလိုက်ရင် လုံလောက်ပြီပါပြီ။ Dashboard ကိုပြန်ဖွင့်ချင်ရင် `openclaw dashboard` သုံးပါ။ 
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-openclaw dashboard
-openclaw --version
-openclaw doctor
-openclaw gateway status
-```
-
-macOS app ကိုကြိုက်သူအတွက် alternative လည်းရှိပါတယ်။ Official platform docs အရ OpenClaw.app က menu-bar companion ဖြစ်ပြီး permissions, notifications, local/remote gateway attachment တို့ကိုကူညီနိုင်ပါတယ်။ သို့သော် app က Node/Bun/Gateway runtime ကို bundle မလုပ်တော့ဘဲ external `openclaw` CLI install ကိုမျှော်လင့်ပါတယ်။ 
-
-**Linux လမ်းကြောင်း**  
-Linux တော်တော်များများမှာ macOS နဲ့ တူတူ installer script ကိုသုံးရုံပါ။ Server/headless machine ဆိုရင် onboarding က GUI မတွေ့လျှင် SSH port-forward hint ပေးတတ်ပါတယ်; Dashboard ကို browser မဖွင့်ချင်ရင် `--no-open` သုံးနိုင်ပါတယ်။ Boolean service အနေနဲ့ systemd user service ကိုအသုံးများပါတယ်။ 
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-openclaw dashboard --no-open
-openclaw --version
-openclaw doctor
-openclaw gateway status
-```
-
-**Alternative install methods**  
-Installer script မသုံးချင်ဘဲ Node ကိုကိုယ်တိုင် manage လုပ်ပြီးသားဆိုရင် npm/pnpm/bun လမ်းကြောင်းရှိပါတယ်။ pnpm သုံးရင် build scripts approve လုပ်ဖို့ `pnpm approve-builds -g` လိုပါတယ်။ Bun က global CLI install အတွက် support ရှိပေမယ့် Gateway runtime အတွက် Node ကပဲ recommended ဖြစ်ပါတယ်။ From-source install လည်း contributor / dev workflow အတွက် တရားဝင် docs ပါရှိပါတယ်။ 
-
-```bash
-# npm
-npm install -g openclaw@latest
-openclaw onboard --install-daemon
-
-# pnpm
-pnpm add -g openclaw@latest
-pnpm approve-builds -g
-openclaw onboard --install-daemon
-
-# bun
-bun add -g openclaw@latest
-openclaw onboard --install-daemon
-```
-
-```bash
-# from source
-git clone https://github.com/openclaw/openclaw.git
-cd openclaw
-pnpm install && pnpm ui:build && pnpm build
-pnpm link --global
-openclaw onboard --install-daemon
-```
-
-**Install troubleshooting tips**  
-တပ်ဆင်ပြီး `openclaw` command မတွေ့ရင် official install doc က `node -v`, `npm prefix -g`, `$PATH` ကိုစစ်ပြီး `$(npm prefix -g)/bin` ကို shell startup file ထဲထည့်ဖို့ ပြောထားပါတယ်။ npm install မှာ `sharp` / libvips issue တက်ရင် `SHARP_IGNORE_GLOBAL_LIBVIPS=1` နဲ့ install ပြန်လုပ်ပါ။ pnpm သုံးရာမှာ build approval မပေးလို့ command မပြီးပြတ်ရင် `pnpm approve-builds -g` ကို မမေ့ပါနဲ့။ 
-
-```bash
-node -v
-npm prefix -g
-echo "$PATH"
-export PATH="$(npm prefix -g)/bin:$PATH"
-```
-
-```bash
-SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install -g openclaw@latest
-```
-# 💬 Discord Channel Setup — OpenClaw Guide
-
-## Overview
-OpenClaw ကို Discord နဲ့ချိတ်လိုက်ရင် AI assistant ကို Discord DM နဲ့ Server channels ထဲကနေ တိုက်ရိုက်အသုံးပြုနိုင်ပါတယ်။
+OpenClaw သည် သင့်စက်ပေါ်တွင် ကိုယ်တိုင် run နိုင်သော (Self-hosted) AI Assistant Gateway တစ်ခု ဖြစ်ပါသည်။ သာမန် Chatbot တစ်ခုထက်ပို၍၊ Telegram, Discord, Slack, WhatsApp ကဲ့သို့သော Messaging App များနှင့် AI Agent များကြားတွင် **Control Center** အဖြစ် ချိတ်ဆက် လုပ်ဆောင်ပေးပါသည်။
 
 ---
 
-## 🧠 What You Can Do
-- DM chat with AI
-- Channel-based AI sessions
-- Slash commands support
-- Automation posting
-- Team workflows
+## 📌 အဓိက အစိတ်အပိုင်းများ (Core Concepts)
+
+OpenClaw ၏ အလုပ်လုပ်ပုံကို နားလည်ရန် အောက်ပါ အစိတ်အပိုင်းများကို သိထားရန် လိုအပ်ပါသည်။
+
+- **Gateway:** OpenClaw ၏ အဓိက အသက်သွေးကြော (Daemon/Process) ဖြစ်ပြီး၊ ၎င်းမရှိဘဲ အခြားလုပ်ဆောင်ချက်များ အလုပ်မလုပ်နိုင်ပါ။
+- **Agent:** စဉ်းစားဆင်ခြင်မှုနှင့် လုပ်ဆောင်ချက်များကို တာဝန်ယူသော "ဦးနှောက်" (Runtime) ဖြစ်သည်။
+- **Channel:** မက်ဆေ့ချ်များ ဝင်ထွက်ရာ လမ်းကြောင်း (ဥပမာ - Telegram, Discord)။
+- **Tool:** AI မှ လက်တွေ့လုပ်ဆောင်နိုင်သော လုပ်ဆောင်ချက်များ (ဥပမာ - `exec`, `browser`, `web_search`)။
+- **Skill:** AI အား မည်သည့်အချိန်တွင် မည်သည့် Tool ကို သုံးရမည်ကို သင်ကြားပေးသော လမ်းညွှန် (`SKILL.md`)။
+- **Workspace:** Agent အလုပ်လုပ်မည့် ဖိုင်တွဲ (ပုံမှန်အားဖြင့် `~/.openclaw/workspace` တွင်ရှိသည်)။
+- **Config:** OpenClaw ၏ ဆက်တင်များ မှတ်သားထားရာ ဖိုင် (`~/.openclaw/openclaw.json`)။
 
 ---
 
-## ⚙️ Setup Steps
+## 🚀 စတင် တပ်ဆင်ခြင်း (Installation)
 
-### 1. Create Discord Bot
-- Go to Discord Developer Portal
-- New Application → Bot → Add Bot
-- Copy Bot Token
+သင့် OS အလိုက် အောက်ပါအတိုင်း တပ်ဆင်နိုင်ပါသည်။ (Node.js လိုအပ်ချက်ကို Installer မှ အလိုအလျောက် ထည့်သွင်းပေးမည် ဖြစ်ပါသည်။)
 
-### 2. Enable Intents
-- Message Content Intent
-- Server Members Intent
+### Windows (WSL2 ဖြင့် အသုံးပြုရန် အထူး အကြံပြုပါသည်)
+Windows တွင် Native ထက် WSL2 သည် ပိုမို တည်ငြိမ်ပါသည်။
+1. PowerShell ကို Administrator ဖြင့်ဖွင့်ပြီး `wsl --install` ကို Run ပါ။
+2. WSL (ဥပမာ - Ubuntu) အတွင်းသို့ ဝင်ရောက်ပြီး အောက်ပါ Command ဖြင့် တပ်ဆင်ပါ။
+   ```bash
+   curl -fsSL https://openclaw.ai/install.sh | bash
+   ```
 
-### 3. Invite Bot
-Scopes:
-- bot
-- applications.commands
-
-Permissions:
-- Send Messages
-- Read Message History
-- View Channels
+### macOS နှင့် Linux
+Terminal တွင် အောက်ပါ Command ကို Run ပါ။
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
 
 ---
 
-### 4. Configure OpenClaw
+## 🏁 ပထမဆုံး အသုံးပြုခြင်း (First Steps)
+
+တပ်ဆင်ပြီးသည်နှင့် အောက်ပါ အဆင့်များအတိုင်း စတင်နိုင်ပါသည်။
+
+1. **Setup ပြုလုပ်ရန်:**
+   ```bash
+   openclaw onboard --install-daemon
+   ```
+   *(မှတ်ချက် - Beginner များအနေဖြင့် Local Model ထက် Hosted Provider + API Key ဖြင့် စတင်ခြင်းက ပိုမိုလွယ်ကူပြီး ရလဒ် ပိုကောင်းစေပါသည်။)*
+
+2. **Dashboard မှတစ်ဆင့် စတင် Chat ရန်:**
+   ```bash
+   openclaw dashboard
+   ```
+   Browser ပွင့်လာပါက Chat box တွင် `Reply with exactly OPENCLAW-OK.` ဟု ရိုက်ထည့်၍ စမ်းသပ်နိုင်ပါသည်။
+
+---
+
+## 🛠️ ပြဿနာဖြေရှင်းခြင်းနှင့် အသုံးဝင်သော Command များ (Troubleshooting & Useful Commands)
+
+Bot အလုပ်မလုပ်တော့ခြင်း၊ စာပြန်မလာခြင်း၊ သို့မဟုတ် Error တစ်ခုခုတက်ပါက အောက်ပါ Command များကို သုံး၍ ပြဿနာရှာဖွေ ဖြေရှင်းနိုင်ပါသည်။
+
+### 1. `openclaw doctor` (ရောဂါရှာဖွေခြင်း)
+- **ဘယ်အချိန်မှာသုံးမလဲ:** စစချင်း ပြဿနာတစ်ခုခုဖြစ်နေသည်ဟု ထင်ပါက (ဥပမာ - Bot စာမပြန်ခြင်း၊ Setup အဆင်မပြေခြင်း) ပထမဆုံး အသုံးပြုရမည့် Command ဖြစ်ပါသည်။
+- **ဘာလုပ်ပေးလဲ:** OpenClaw ၏ System Requirements၊ Config အမှားအယွင်းများ၊ Gateway အခြေအနေ နှင့် Channel ချိတ်ဆက်မှု အစရှိသည်တို့ကို တစ်ပြိုင်နက်တည်း အလိုအလျောက် စစ်ဆေးပြီး ပြဿနာရှိသောနေရာကို ထောက်ပြပေးပါသည်။
+
+### 2. `openclaw status` နှင့် `openclaw gateway status`
+- **ဘယ်အချိန်မှာသုံးမလဲ:** Gateway (နောက်ကွယ်မှ အဓိက Process) အလုပ် လုပ်/မလုပ် သိချင်သောအခါတွင် သုံးပါသည်။
+- **ဘာလုပ်ပေးလဲ:** Gateway run နေသလား၊ သေသွားပြီလား ဆိုသည်ကို ပြသပေးပါသည်။ `openclaw gateway status` သည် ပို၍တိကျသော အခြေအနေကို ဖော်ပြပေးပါသည်။
+
+### 3. `openclaw logs --follow` (မှတ်တမ်းများကြည့်ခြင်း)
+- **ဘယ်အချိန်မှာသုံးမလဲ:** Bot ကို စာပို့လိုက်သော်လည်း ဘာကြောင့် စာပြန်မလာသည်ကို နောက်ကွယ်တွင် ဘာတွေဖြစ်နေလဲ (Error များ၊ API ပြဿနာများ) ကို တိုက်ရိုက် ကြည့်ရှုလိုသောအခါ သုံးပါသည်။
+- **ဘာလုပ်ပေးလဲ:** လက်ရှိ အချိန်နှင့်တစ်ပြေးညီ (Real-time) OpenClaw ၏ အလုပ်လုပ်နေပုံ၊ Error Message များကို ဖော်ပြပေးပါသည်။ ထွက်လိုပါက `Ctrl + C` ကို နှိပ်ပါ။
+
+### 4. `openclaw gateway restart` (ပြန်လည်စတင်ခြင်း)
+- **ဘယ်အချိန်မှာသုံးမလဲ:** ဆက်တင် (Config) အသစ်ပြောင်းလိုက်သောအခါ၊ Bot Error တက်ပြီး ဟန်း (Hang) သွားသောအခါ၊ သို့မဟုတ် Memory အသုံးပြုမှုများနေ၍ ရှင်းလင်းလိုသောအခါ သုံးပါသည်။
+- **ဘာလုပ်ပေးလဲ:** OpenClaw Gateway ကို ပိတ်ပြီး အသစ် ပြန်ဖွင့်ပေးပါသည်။
+
+### 5. `openclaw config validate` (ဆက်တင် မှန်/မမှန် စစ်ဆေးခြင်း)
+- **ဘယ်အချိန်မှာသုံးမလဲ:** `openclaw.json` (ဆက်တင်ဖိုင်) တွင် Token ထည့်ခြင်း၊ ပြင်ဆင်ခြင်းများ ပြုလုပ်ပြီးနောက် စာလုံးပေါင်း အမှားအယွင်း ရှိ/မရှိ စစ်ဆေးလိုသောအခါ သုံးပါသည်။
+- **ဘာလုပ်ပေးလဲ:** ဆက်တင်ဖိုင်ထဲတွင် JSON format မှားယွင်းနေခြင်း၊ မပါဝင်ရမည့် အချက်များ ပါနေခြင်းတို့ကို ထောက်ပြပေးပါသည်။
+
+---
+
+## 🔗 ချန်နယ်များ ချိတ်ဆက်ခြင်း (Connecting Channels)
+
+OpenClaw ကို သင့်စိတ်ကြိုက် Messaging App များနှင့် ချိတ်ဆက်နိုင်ပါသည်။
+
+### Discord ဖြင့် ချိတ်ဆက်ခြင်း
+
+Discord ပေါ်တွင် OpenClaw ကို အသုံးပြုရန်အတွက် သင့်ကိုယ်ပိုင် Private Server တစ်ခု ဖန်တီးပြီး ထို Server ထဲသို့ Bot အား ထည့်သွင်းရန် အကြံပြုပါသည်။
+
+**အဆင့် (၁): Discord Bot ဖန်တီးခြင်း**
+1. [Discord Developer Portal](https://discord.com/developers/applications) သို့သွားပြီး **New Application** ကိုနှိပ်ကာ နာမည်ပေးပါ။
+2. ဘယ်ဘက် Menu မှ **Bot** ကိုရွေးပြီး သင့် Agent အတွက် နာမည်တစ်ခု ပေးပါ။
+3. ထိုစာမျက်နှာအောက်ရှိ **Privileged Gateway Intents** တွင် အောက်ပါတို့ကို ဖွင့်ပေးပါ-
+   - **Message Content Intent** (မဖြစ်မနေ ဖွင့်ရမည်)
+   - **Server Members Intent** (အကြံပြုသည်)
+4. အပေါ်သို့ ပြန်တက်၍ **Reset Token** ကိုနှိပ်ပြီး ထွက်လာသော **Bot Token** ကို သေချာစွာ သိမ်းဆည်းထားပါ။ (၎င်းသည် သင့် Bot ၏ သော့ချက် ဖြစ်သည်)
+
+**အဆင့် (၂): Bot ကို သင့် Server ထဲသို့ ထည့်ခြင်း**
+1. ဘယ်ဘက် Menu မှ **OAuth2** ကိုနှိပ်ပါ။
+2. အောက်ဘက်ရှိ **OAuth2 URL Generator** တွင် `bot` နှင့် `applications.commands` ကို အမှန်ခြစ်ပါ။
+3. အောက်တွင်ပေါ်လာသော **Bot Permissions** တွင် အောက်ပါတို့ကို အမှန်ခြစ်ပါ-
+   - View Channels
+   - Send Messages
+   - Read Message History
+   - Embed Links
+   - Attach Files
+4. အောက်ဆုံးရှိ URL ကို Copy ကူးပြီး Browser တွင်ဖွင့်ကာ သင့် Server ထဲသို့ Bot ကို ထည့်သွင်းပါ။
+
+**အဆင့် (၃): Developer Mode ဖွင့်ခြင်း (ID များ ရယူရန်)**
+1. Discord App ၏ **User Settings** (ဂီယာခလုတ်) → **Advanced** တွင် **Developer Mode** ကိုဖွင့်ပါ။
+2. သင့် Server Icon ကို Right-click ထောက်ပြီး **Copy Server ID** ကိုနှိပ်၍ သိမ်းထားပါ။
+3. သင့် ကိုယ်ပိုင် Avatar ကို Right-click ထောက်ပြီး **Copy User ID** ကိုနှိပ်၍ သိမ်းထားပါ။
+
+**အဆင့် (၄): OpenClaw ဘက်တွင် ဆက်တင်ထည့်ခြင်း**
+Terminal တွင် အောက်ပါ Command များကို Run ပါ (YOUR_BOT_TOKEN နေရာတွင် သင့် Bot Token ကို အစားထိုးပါ)-
 
 ```bash
-export DISCORD_BOT_TOKEN="YOUR_TOKEN"
-
-openclaw config set channels.discord.token   --ref-provider default   --ref-source env   --ref-id DISCORD_BOT_TOKEN
-
+export DISCORD_BOT_TOKEN="YOUR_BOT_TOKEN"
+openclaw config set channels.discord.token --ref-provider default --ref-source env --ref-id DISCORD_BOT_TOKEN
 openclaw config set channels.discord.enabled true
-```
-
----
-
-### 5. Run Gateway
-
-```bash
 openclaw gateway restart
 ```
 
----
+**အဆင့် (၅): ချိတ်ဆက်မှုကို အတည်ပြုခြင်း (Pairing)**
+1. သင့် Discord Server ထဲရှိ Bot ထံသို့ တိုက်ရိုက် (DM ဖြင့်) မက်ဆေ့ချ် တစ်ခုခု ပို့လိုက်ပါ။
+2. Bot မှ သင့်အား **Pairing Code** (ဂဏန်း/စာလုံးများ) ပြန်ပို့ပေးပါလိမ့်မည်။
+3. Terminal တွင် အောက်ပါ Command ဖြင့် အတည်ပြုပါ-
+   ```bash
+   openclaw pairing approve discord <code>
+   ```
 
-### 6. Pairing
+*(ယခုအခါ Discord တွင် OpenClaw Agent နှင့် စတင် စကားပြောနိုင်ပြီ ဖြစ်ပါသည်။ Guild (Server Channels) များတွင် အသုံးပြုလိုပါက Allowlist ဆက်တင်များ ထပ်မံ ထည့်သွင်းရန် လိုအပ်နိုင်ပါသည်။)*
 
-```bash
-openclaw pairing approve discord <code>
-```
+### Telegram ဖြင့် ချိတ်ဆက်ခြင်း
 
----
+Telegram တွင် အသုံးပြုရန် Bot အသစ်တစ်ခု ဖန်တီးပြီး ချိတ်ဆက်နိုင်ပါသည်။
 
-## 🧪 Test
+**အဆင့် (၁): BotFather မှတစ်ဆင့် Bot ဖန်တီးခြင်း**
+1. Telegram တွင် **@BotFather** ကိုရှာဖွေပြီး `Start` နှိပ်ပါ။
+2. `/newbot` ဟုရိုက်ထည့်ပြီး Bot အတွက် နာမည် နှင့် Username ကို ပေးပါ။
+3. BotFather မှပေးလာသော **Bot Token** ကို သေချာစွာ သိမ်းဆည်းထားပါ။
 
-Send in Discord:
-
-```
-Reply with OPENCLAW-OK
-```
-
----
-
-## 🏢 Server Mode
-
-- DM = main session
-- Channel = separate session
-
----
-
-## 🔒 Security
-
-- Keep token secret
-- Avoid admin permissions
-- Use allowlist
-
----
-
-## 🧭 Summary
-
-OpenClaw + Discord = AI assistant in your chat workspace
-
-# 📱 Telegram Channel Setup — OpenClaw Guide
-
-## Overview
-OpenClaw ကို Telegram နဲ့ချိတ်လိုက်ရင် AI assistant ကို mobile ထဲကနေ တိုက်ရိုက်အသုံးပြုနိုင်ပါတယ်။
-
----
-
-## 🧠 What You Can Do
-- DM chat with AI
-- Group AI assistant
-- Automation alerts
-- Mobile-first control
-
----
-
-## ⚙️ Setup Steps
-
-### 1. Create Bot (BotFather)
-- Telegram → @BotFather
-- /newbot
-- Copy Bot Token
-
----
-
-### 2. Configure OpenClaw
+**အဆင့် (၂): OpenClaw ဘက်တွင် ဆက်တင်ထည့်ခြင်း**
+Terminal တွင် အောက်ပါ Command များကို Run ပါ (YOUR_BOT_TOKEN နေရာတွင် သင့် Bot Token ကို အစားထိုးပါ)-
 
 ```bash
-export TELEGRAM_BOT_TOKEN="YOUR_TOKEN"
-
-openclaw config set channels.telegram.token   --ref-provider default   --ref-source env   --ref-id TELEGRAM_BOT_TOKEN
-
+export TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN"
+openclaw config set channels.telegram.token --ref-provider default --ref-source env --ref-id TELEGRAM_BOT_TOKEN
 openclaw config set channels.telegram.enabled true
 ```
 
----
+**အဆင့် (၃): ချိတ်ဆက်မှုကို အတည်ပြုခြင်း (Pairing)**
+1. Gateway ကို စတင်ပါ-
+   ```bash
+   openclaw gateway
+   ```
+2. Terminal တွင် Pairing Code ကို စစ်ဆေးပါ-
+   ```bash
+   openclaw pairing list telegram
+   ```
+3. သင့် Telegram Bot ဆီသို့ တိုက်ရိုက် (DM ဖြင့်) သွားပြီး စကားပြောကြည့်ပါ။ ထို့နောက် Terminal တွင် အောက်ပါအတိုင်း အတည်ပြုပါ-
+   ```bash
+   openclaw pairing approve telegram <code>
+   ```
 
-### 3. Run Gateway
-
-```bash
-openclaw gateway restart
-```
-
----
-
-### 4. Pairing
-
-```bash
-openclaw pairing approve telegram <code>
-```
-
----
-
-## 🧪 Test
-
-Send in Telegram:
-
-```
-Reply with OPENCLAW-OK
-```
+*(Telegram Group များတွင် ထည့်သွင်း အသုံးပြုလိုပါက Bot ကို Group ထဲသို့ ထည့်ပြီးနောက် OpenClaw config ဖိုင်တွင် `groupPolicy` နှင့် `allowFrom` ဆက်တင်များ ပြင်ဆင်ရန် လိုအပ်နိုင်ပါသည်။)*
 
 ---
 
-## 🏢 Behavior
+## 🤖 ရရှိနိုင်သော AI Model ၂၀ မျိုး နှင့် ချိတ်ဆက်အသုံးပြုနည်းများ (၂၀၂၆ Update)
 
-- DM = main session
-- Group = separate session
+OpenClaw တွင် အခမဲ့ (Free) မှစ၍ အခကြေးငွေပေးရသော (Premium) AI Model များအထိ စိတ်ကြိုက် ချိတ်ဆက် အသုံးပြုနိုင်ပါသည်။ အောက်ပါတို့မှာ ၂၀၂၆ ခုနှစ်အတွက် အကောင်းဆုံး Model ၂၀ ခုနှင့် ၎င်းတို့၏ API Key များ ရယူနည်းများ ဖြစ်ပါသည်။
+
+### 🌟 အခမဲ့ နှင့် ဈေးသက်သာသော Model များ (Free / Budget-Friendly)
+
+**၁။ DeepSeek V4 Preview**
+- **အကျဉ်းချုပ်:** လက်ရှိ ၂၀၂၆ တွင် အခမဲ့/ဈေးသက်သာသော Model များထဲ၌ အကောင်းဆုံး (Reasoning & Coding) ဖြစ်ပါသည်။
+- **API ရယူရန်:** [DeepSeek Platform](https://platform.deepseek.com/) တွင် အကောင့်ဖွင့်၍ Key ယူပါ။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.deepseek.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "deepseek/deepseek-v4-preview"
+  ```
+
+**၂။ DeepSeek V3**
+- **အကျဉ်းချုပ်:** ယခင် မျိုးဆက်ဖြစ်သော်လည်း အလွန်မြန်ဆန်ပြီး ဈေးနှုန်း အလွန်သက်သာပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "deepseek/deepseek-chat"
+  ```
+
+**၃။ Gemini 3.1 Flash (Google)**
+- **အကျဉ်းချုပ်:** Google ၏ မျိုးဆက်သစ် Model ဖြစ်ပြီး အမြန်နှုန်းနှင့် Free Tier (အခမဲ့) ပေးထားမှုကြောင့် အလွန်ရေပန်းစားသည်။
+- **API ရယူရန်:** [Google AI Studio](https://aistudio.google.com/) သို့သွား၍ "Get API key" ကိုနှိပ်ပါ။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.google.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "google/gemini-3.1-flash"
+  ```
+
+**၄။ Gemini 3.1 Flash-Lite**
+- **အကျဉ်းချုပ်:** ပို၍ပေါ့ပါးပြီး မြန်ဆန်သော Model ဖြစ်ကာ ရိုးရှင်းသည့် မေးခွန်းများအတွက် အထူးကောင်းမွန်သည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "google/gemini-3.1-flash-lite"
+  ```
+
+**၅။ LLaMA 4 Scout (Meta via Groq/OpenRouter)**
+- **အကျဉ်းချုပ်:** Meta ၏ အသစ်ဆုံး Open-weight Model ဖြစ်ပြီး Context အလွန်ရှည်လျားစွာ (10M အထိ) မှတ်သားနိုင်ပါသည်။
+- **API ရယူရန်:** [OpenRouter](https://openrouter.ai/) တွင် LLaMA 4 ကို ရွေးချယ်နိုင်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.openrouter.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "openrouter/meta-llama/llama-4-scout"
+  ```
+
+**၆။ LLaMA 4 (Meta)**
+- **အကျဉ်းချုပ်:** LLaMA 4 ၏ Standard Version ဖြစ်ပြီး General Tasks များအတွက် သင့်တော်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "openrouter/meta-llama/llama-4"
+  ```
+
+**၇။ Gemma 4 (Google)**
+- **အကျဉ်းချုပ်:** Google ၏ Open-weight Model အသစ်ဖြစ်ပြီး Coding နှင့် ကျိုးကြောင်းဆင်ခြင်ရာတွင် အထူးကောင်းမွန်သည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "google/gemma-4"
+  ```
+
+**၈။ Groq LLaMA / Mixtral**
+- **အကျဉ်းချုပ်:** Groq ၏ LPU ဖြင့် အလုပ်လုပ်သောကြောင့် တစ်စက္ကန့်လျှင် စကားလုံးရာချီ ထုတ်ပေးနိုင်သော အမြန်ဆုံး API ဖြစ်ပါသည်။
+- **API ရယူရန်:** [GroqCloud](https://console.groq.com/keys)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.groq.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "groq/llama3-70b-8192"
+  ```
+
+**၉။ Qwen 3 (Alibaba)**
+- **အကျဉ်းချုပ်:** Alibaba ၏ နောက်ဆုံးထွက် Model ဖြစ်ပြီး ဘာသာစကားမျိုးစုံနှင့် Multimodal အတွက် အလွန်ကောင်းမွန်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:** OpenRouter မှတစ်ဆင့် သုံးနိုင်ပါသည်။
+  ```bash
+  openclaw config set agents.defaults.model "openrouter/qwen/qwen-3"
+  ```
+
+**၁၀။ OpenRouter Free Models (Aggregator)**
+- **အကျဉ်းချုပ်:** Model ပေါင်းစုံကို Free Tier ဖြင့် ခေါ်သုံးနိုင်သော API တစ်ခုတည်းဖြစ်ပါသည်။
+- **API ရယူရန်:** [OpenRouter](https://openrouter.ai/)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.openrouter.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "openrouter/meta-llama/llama-3-8b-instruct:free"
+  ```
+
+### 💎 အဆင့်မြင့် Premium Model များ (High-End / Paid)
+
+**၁၁။ GPT-5.5 (OpenAI)**
+- **အကျဉ်းချုပ်:** OpenAI ၏ ၂၀၂၆ နောက်ဆုံးထွက် Flagship Model ဖြစ်ပြီး Agentic Coding နှင့် သိပ္ပံနည်းကျ သုတေသနလုပ်ငန်းများတွင် အကောင်းဆုံးဖြစ်ပါသည်။
+- **API ရယူရန်:** [OpenAI Platform](https://platform.openai.com/api-keys)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.openai.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "openai/gpt-5.5"
+  ```
+
+**၁၂။ GPT-5.4 (OpenAI)**
+- **အကျဉ်းချုပ်:** ယခင် Update Model ဖြစ်ပြီး Professional Knowledge Work အတွက် အလွန်အားထားရပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "openai/gpt-5.4"
+  ```
+
+**၁၃။ Claude Opus 4.7 (Anthropic)**
+- **အကျဉ်းချုပ်:** ၂၀၂၆ ဧပြီလတွင် ထွက်ရှိသော Model အသစ်ဖြစ်ပြီး ရှုပ်ထွေးသော စဉ်းစားဆင်ခြင်မှုများနှင့် Software Engineering အတွက် နံပါတ် ၁ နေရာတွင် ရှိနေပါသည်။
+- **API ရယူရန်:** [Anthropic Console](https://console.anthropic.com/)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.anthropic.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "anthropic/claude-opus-4-7"
+  ```
+
+**၁၄။ Claude Sonnet 4.6 (Anthropic)**
+- **အကျဉ်းချုပ်:** အလုပ်လုပ်နှုန်းမြန်ဆန်ပြီး နေ့စဉ် Coding နှင့် စာရေးသားရာတွင် အကောင်းဆုံး Workhorse Model ဖြစ်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set agents.defaults.model "anthropic/claude-sonnet-4-6"
+  ```
+
+**၁၅။ Gemini 3.1 Pro (Google)**
+- **အကျဉ်းချုပ်:** Google ၏ Premium Model ဖြစ်ပြီး Multi-modal (ရုပ်ပုံ၊ အသံ၊ စာ) ပေါင်းစပ်ခွဲခြမ်းစိတ်ဖြာရာတွင် အထူးကောင်းမွန်သည်။
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.google.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "google/gemini-3.1-pro"
+  ```
+
+**၁၆။ Grok 4 (xAI)**
+- **အကျဉ်းချုပ်:** X (Twitter) အချက်အလက်များကို Real-time ရယူနိုင်ပြီး Native Tool အသုံးပြုမှုများတွင် အလွန်ကောင်းမွန်သည်။
+- **API ရယူရန်:** [X.AI Console](https://console.x.ai/)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.xai.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "xai/grok-4"
+  ```
+
+**၁၇။ Mistral Large 3 (Mistral AI)**
+- **အကျဉ်းချုပ်:** ဥရောပမှ ထိပ်တန်း Open-weight Model အကြီးစားဖြစ်ပြီး ဘာသာစကားကျွမ်းကျင်မှု အလွန်မြင့်မားသည်။
+- **API ရယူရန်:** [Mistral Platform](https://console.mistral.ai/)
+- **OpenClaw တွင်ထည့်ရန်:**
+  ```bash
+  openclaw config set providers.mistral.apiKey "YOUR_API_KEY"
+  openclaw config set agents.defaults.model "mistral/mistral-large-3"
+  ```
+
+**၁၈။ Muse Spark (Meta)**
+- **အကျဉ်းချုပ်:** Meta ၏ စီးပွားရေးလုပ်ငန်းသုံး Managed API အသစ်ဖြစ်ပြီး Multi-agent Orchestration အတွက် အလွန်ကောင်းမွန်သည်။
+- **API ရယူရန်:** Meta API Gateway မှတစ်ဆင့် ရယူနိုင်ပါသည်။
+
+**၁၉။ Zhipu GLM-5.1**
+- **အကျဉ်းချုပ်:** ရှည်လျားသော Software Development Task များနှင့် Agentic Engineering အတွက် အထူးထုတ်လုပ်ထားသော Model ဖြစ်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:** OpenRouter မှတစ်ဆင့် အသုံးပြုရန် အကြံပြုပါသည်။
+  ```bash
+  openclaw config set agents.defaults.model "openrouter/zhipu/glm-5.1"
+  ```
+
+**၂၀။ Moonshot Kimi K2.6**
+- **အကျဉ်းချုပ်:** Context Window အလွန်ရှည်လျားပြီး Coding နှင့် Customer Support လုပ်ငန်းများအတွက် သင့်တော်ပါသည်။
+- **OpenClaw တွင်ထည့်ရန်:** OpenRouter မှတစ်ဆင့် အသုံးပြုရန် အကြံပြုပါသည်။
+  ```bash
+  openclaw config set agents.defaults.model "openrouter/moonshot/kimi-k2.6"
+  ```
+
+*(မှတ်ချက် - API Key များ ထည့်သွင်းပြီးတိုင်း Gateway ကို `openclaw gateway restart` ဖြင့် Restart ချပေးရန် လိုအပ်ပါသည်။)*
 
 ---
 
-## 🔒 Security
+## ⏰ အလိုအလျောက် ခိုင်းစေခြင်း (Cron Jobs Automation)
 
-- Keep token secret
-- Avoid public groups
-- Use allowlist
+OpenClaw ကို Chatbot အဖြစ်သာမက အချိန်နှင့်အမျှ အလိုအလျောက် အလုပ်လုပ်ပေးသော Assistant အဖြစ်ပါ အသုံးပြုနိုင်ပါသည်။
 
----
-
-## 🧭 Summary
-
-OpenClaw + Telegram = AI assistant in your phone
-
-## နေ့စဉ်သုံး workflow နဲ့ အရေးကြီး command များ
-
-Beginner အတွက် day-to-day workflow က ရှုပ်သလိုထင်ရပေမယ့် တကယ်တော့ “install → onboard → health check → dashboard/chat → config/channels → agents → skills/plugins” ပုံစံပါ။ Onboarding က local mode မှာ model/auth, workspace, gateway settings, channels, daemon install, health check, skills setup အထိ guided flow တစ်ခါတည်းလုပ်ပေးနိုင်ပါတယ်။ Remote mode လည်း ရှိပြီး remote host ကို install/modify မလုပ်ဘဲ Gateway URL နဲ့ token ထည့်ပြီး connect လုပ်နိုင်ပါတယ်။ 
-
-```mermaid
-flowchart TD
-    A[Install OpenClaw] --> B[openclaw onboard]
-    B --> C[Health check]
-    C --> D[openclaw dashboard]
-    D --> E[First chat]
-    E --> F[Configure channels]
-    F --> G[Create extra agents]
-    G --> H[Add skills / plugins]
-    H --> I[Use status, health, doctor for maintenance]
-```
-
-အောက်ကဇယားက beginner အတွက် အများဆုံးသုံးရတဲ့ command တွေကို official CLI reference, Gateway docs, config docs, channels docs ကိုအခြေခံပြီး စုထားတာပါ။ 
-
-| Command | ဘာလုပ်ပေးလဲ | Beginner အတွက်ဘယ်အချိန်သုံးမလဲ |
-|---|---|---|
-| `openclaw onboard` | onboarding wizard | ပထမ setup |
-| `openclaw dashboard` | browser Control UI ဖွင့် | browser chat / config / sessions |
-| `openclaw status` | session health, recent recipients, usage | “overall ဘာဖြစ်နေလဲ” စစ်ချင်ရင် |
-| `openclaw health` | running Gateway health snapshot | Gateway ရဲ့ live/near-live health |
-| `openclaw doctor` | repair + migration + diagnostics | တစ်ခုခုက ထင်သလိုမဖြစ်ရင် first-aid |
-| `openclaw gateway run` | foreground Gateway | daemon မသုံးဘဲ test/run |
-| `openclaw gateway install` | OS service install | auto-start လိုရင် |
-| `openclaw config get/set/validate` | config စစ်/ပြင်/validate | config learning |
-| `openclaw agents add` | agent အသစ်ဖန်တီး | personal/work ခွဲသုံးချင်ရင် |
-| `openclaw agents bind` | channel traffic ကို agent နဲ့ချိတ် | multi-agent routing |
-| `openclaw channels add` | channel account ထည့် | Telegram/Discord စဖြစ် />
-| `openclaw channels status --probe` | live channel probe | channel ပြဿနာစစ် |
-| `openclaw skills search/install/list` | skill ရှာ/ထည့်/ကြည့် | extra capability သွင်းချင်ရင် |
-| `openclaw plugins list/install` | plugin စီမံ | voice call, extra channels စသည် |
-| `openclaw models status/set` | model ကိုကြည့်/ပြောင်း | provider/model ပြောင်းချင်ရင် |
-
-`openclaw config` ကို beginner အနေနဲ့ စတင်သုံးမယ်ဆိုရင် “CLI one-liner” mental model နဲ့ စလို့ကောင်းပါတယ်။ Official config docs အရ config file က `~/.openclaw/openclaw.json` ဖြစ်ပြီး JSON5 format ကိုသုံးကာ Gateway က file changes ကို watch/apply လုပ်နိုင်ပါတယ်။ Unknown key, invalid type, invalid value ရှိရင် boot မတက်နိုင်တာကြောင့် validate habit က အရေးကြီးပါတယ်။ 
-
-```bash
-openclaw config get agents.defaults.workspace
-openclaw config set agents.defaults.heartbeat.every "2h"
-openclaw config validate
-```
-
-အဓိက option တချို့ကိုလည်း မှတ်ထားပါ။
-
-- `--json` က machine-readable output ပေးပေမယ့် **non-interactive mode ကိုအလိုအလျောက်မဖြစ်စေပါဘူး**။ Script အတွက် `--non-interactive` ကိုသီးသန့်သုံးရပါတယ်။ 
-- `--local` က Gateway request fail ဖြစ်မှ fallback မလုပ်ဘဲ embedded agent ကိုတိုက်ရိုက် run ခိုင်းတာပါ။ 
-- `--deep` က `status` / `security audit` စတာတွေမှာ ပိုပြီး live probe ပြေးပေးတတ်ပါတယ်။ 
-- `--install-daemon` က onboarding အတွင်း OS-specific service ကို install လုပ်ဖို့ အသုံးများပါတယ်။ 
-- `--verbose` က health/status output ကိုအသေးစိတ်တိုးစေပါတယ်။ 
-
-## လက်တွေ့ လေ့ကျင့်ခန်းများ
-
-အောက်က examples တွေမှာ output ကို **နမူနာ** အနေနဲ့ပြထားပါတယ်။ Model provider, release version, auth method, plugin set, OS environment ပေါ်မူတည်ပြီး actual output format က ကွဲနိုင်ပါတယ်။ သို့သော် command/methodology က official docs မှာရှိတဲ့ flow ကိုပဲ အခြေခံထားပါတယ်။ 
-
-**Exercise 1 — Install အောင်သွားပြီလား စစ်မယ်**
-
-ဒီ exercise ရဲ့ ရည်ရွယ်ချက်က CLI, doctor, Gateway သုံးခုစလုံးကောင်းသလား စစ်တာပါ။ Official docs က verify-the-install အတွက် `openclaw --version`, `openclaw doctor`, `openclaw gateway status` ကိုတန်းသုံးပေးထားပြီး troubleshooting doc က healthy signals အနေနဲ့ runtime running / probe ok / no blocking issues ကိုကြည့်ဖို့ ပြောထားပါတယ်။ 
-
-```bash
-openclaw --version
-openclaw doctor
-openclaw gateway status
-```
-
-**Expected Output**
-
-1. `openclaw --version` က version string တစ်ခု ပြန်လာရမယ်။  
-2. `openclaw doctor` က blocking config/service issue မရှိသင့်ဘူး။  
-3. `openclaw gateway status` မှာ runtime running, probe ok လို healthy signal တွေမြင်ရတတ်တယ်။ 
-
-**နမူနာ output**
-
-```text
-openclaw 1.x.y
-
-Doctor:
-- no blocking config issues
-- gateway healthy
-
-Gateway status:
-Runtime: running
-RPC probe: ok
-```
-
-တစ်ခုခု fail ဖြစ်ရင် ဒီလိုစမ်းပါ။ `doctor` documentation အရ automatic repair အတွက် `--repair` နဲ့ `--force` modes ရှိပါတယ်။ 
-
-```bash
-openclaw doctor --repair
-```
-
-**Exercise 2 — Browser dashboard ကနေ ပထမဆုံး chat စမယ်**
-
-ဒါက beginner အတွက် အရေးကြီးဆုံး exercise ဖြစ်ပါတယ်။ Onboarding ပြီးရင် CLI က dashboard ကို auto-open လုပ်ပေးနိုင်ပြီး, manual re-open အတွက် `openclaw dashboard` ရှိပါတယ်။ Dashboard URL bootstrap, token/password prompt, headless hint တွေကို official dashboard doc ကရှင်းပြထားပါတယ်။ 
-
-```bash
-openclaw dashboard
-```
-
-၁။ browser ဖွင့်သွားလိုက်ပါ။  
-၂။ မဖွင့်သွားရင် command output ထဲက URL ကို copy လုပ်ပါ။  
-၃။ Shared-secret auth prompt တက်ရင် onboarding မှာဖန်တီးထားတဲ့ token သို့မဟုတ် password ကိုထည့်ပါ။  
-၄။ Chat box ထဲမှာ ဒီလိုပို့ပါ။
-
-```text
-Reply with exactly OPENCLAW-OK.
-```
-
-**Expected Output**
-
-OpenClaw က စာကြောင်းတိုတစ်ကြောင်းပြန်သင့်ပါတယ်။ Prompt ကိုတင်းတင်းကျပ်ကျပ်ရေးထားလို့ `OPENCLAW-OK.` တို့နီးပါးဖြစ်မယ်လို့ မျှော်လင့်နိုင်ပေမယ့် model behavior ကြောင့် punctuation ကွာနိုင်ပါတယ်။ Dashboard မချိတ်နိုင်ရင် `openclaw gateway status`, `openclaw status`, `openclaw logs --follow`, `openclaw doctor` အစဉ်လိုက် စစ်ပါ။ 
-
-Headless Linux/server မှာ browser မဖွင့်ချင်ရင် ဒီနည်းကို သုံးပါ။ 
-
-```bash
-openclaw dashboard --no-open
-```
-
-**Exercise 3 — Work agent တစ်ခု ထပ်ဖန်တီးမယ်**
-
-Multi-agent routing ကို novice များအတွက် အခက်ဆုံးအပိုင်းလိုထင်ရပေမယ့် သဘောတရားက ရိုးရိုးပါ။ Agent တစ်ခုစီမှာ workspace, state, sessions သီးသန့်ရှိပါတယ်။ Inbound channel traffic ကို bindings နဲ့ ဘယ် agent လက်ခံမလဲ ဆုံးဖြတ်ပါတယ်။ Official automation docs က `openclaw agents add work` example ကို တိုက်ရိုက်ပေးထားပါတယ်။ 
-
-```bash
-openclaw agents add work \
-  --workspace ~/.openclaw/workspace-work \
-  --model openai/gpt-5.4 \
-  --bind telegram:ops \
-  --non-interactive \
-  --json
-```
-
-ပြီးရင် binding ကိုစစ်ပါ။
-
-```bash
-openclaw agents bindings --agent work --json
-```
-
-**Expected Output**
-
-- `work` ဆိုတဲ့ agent အသစ်တစ်ခုရှိလာမယ်  
-- `workspace-work` ဆိုတဲ့ folder ကိုသုံးမယ်  
-- `telegram:ops` binding ကိုပြပေးမယ်  
-- နောက်ပိုင်း `work` agent သီးသန့် persona/skills/config နဲ့ run လို့ရမယ် 
-
-**နမူနာ output**
-
-```json
-{
-  "id": "work",
-  "workspace": "~/.openclaw/workspace-work",
-  "model": "openai/gpt-5.4",
-  "bindings": ["telegram:ops"]
-}
-```
-
-Channel မသတ်မှတ်သေးဘူးဆိုရင် `--bind` ကိုဖျက်ပြီး agent တို့ workspace တို့အရင်စတင်နိုင်ပါတယ်။ Telegram token ထည့်ပြီး channel add လုပ်ဖို့ အခြေခံ syntax ကဒီလိုပါ။ 
-
-```bash
-openclaw channels add --channel telegram --token <bot-token>
-openclaw agents bind --agent work --bind telegram:ops
-```
-
-**Exercise 4 — ကိုယ့်ပထမဆုံး custom skill ရေးမယ်**
-
-ဒါက beginner အတွက် OpenClaw ရဲ့ “aha moment” ဖြစ်တတ်ပါတယ်။ Official “Creating Skills” page က hello-world skill example ကို တိုက်ရိုက်ပေးထားပါတယ်။ Skill တစ်ခုက folder တစ်ခုထဲက `SKILL.md` တစ်ဖိုင်ဆိုတာကို ဒီ exercise ကနားလည်စေပါတယ်။ 
-
-ပထမဆုံး skill folder ဖန်တီးပါ။
-
-```bash
-mkdir -p ~/.openclaw/workspace/skills/hello-world
-```
-
-`SKILL.md` ကို create လုပ်ပါ။
-
-```markdown
----
-name: hello_world
-description: A simple skill that says hello.
----
-
-# Hello World Skill
-When the user asks for a greeting, use the `echo` tool to say
-"Hello from your custom skill!".
-```
-
-Skill ကို reload စေဖို့ session အသစ်ဖွင့်ပါ သို့မဟုတ် Gateway restart လုပ်ပါ။ Official docs က `/new` သို့မဟုတ် `openclaw gateway restart` ကိုပြထားပါတယ်။ 
-
-```bash
-openclaw gateway restart
-openclaw skills list
-```
-
-ပြီးရင် test လုပ်ပါ။ `openclaw agent` command reference အရ session selector တစ်ခုထည့်တာက ပိုရှင်းလင်းတဲ့အတွက် beginner အနေဖြင့် `--agent main` ကိုထည့်သုံးဖို့ အကြံပြုပါတယ်။ 
-
-```bash
-openclaw agent --agent main --message "give me a greeting"
-```
-
-**Expected Output**
-
-နမူနာ skill instruction အတိုင်း `"Hello from your custom skill!"` လိုအဖြေပြန်လာသင့်ပါတယ်။ `openclaw skills list` မှာလည်း skill ကိုမြင်ရမယ်။ 
-
-**နမူနာ output**
-
-```text
-Hello from your custom skill!
-```
-
-**Exercise 5 — Plugin တစ်ခု ထည့်မယ်**
-
-Plugin က OpenClaw ကို channel/provider/tool/skill/speech စတာတွေအထိ တိုးချဲ့နိုင်တဲ့ package မျိုးဖြစ်ပါတယ်။ Official plugins quick-start docs က `@openclaw/voice-call` ကို example အဖြစ် တိုက်ရိုက်သုံးထားပါတယ်။ 
-
-```bash
-openclaw plugins list
-openclaw plugins install @openclaw/voice-call
-openclaw gateway restart
-```
-
-လိုအပ်ရင် config ထဲမှာ plugin settings ကိုပြင်ပါ။
-
-```bash
-openclaw config set plugins.entries.voice-call.enabled true
-openclaw config validate
-```
-
-**Expected Output**
-
-- plugin install complete
-- `plugins list` ထဲမှာ `voice-call` လို့မြင်ရမယ်
-- restart ပြီးနောက် gateway က plugin registry ကို load လုပ်ထားမယ် 
-
-plugin install failure ဖြစ်ပြီး config invalid ဖြစ်နေလျှင် docs က `openclaw doctor --fix` နဲ့ `openclaw plugins doctor` ကိုသုံးဖို့ အချက်ပေးထားပါတယ်။ 
-
-# လူတွေ OpenClaw ကို လက်တွေ့ဘယ်လိုသုံးကြလဲ — Cron Jobs / Scheduled Automation Use Cases
-
-OpenClaw ကို လူတွေ chatbot တစ်ခုလိုပဲမဟုတ်ဘဲ **အချိန်အလိုက် အလုပ်လုပ်ပေးတဲ့ personal automation agent** အဖြစ်လည်း သုံးကြပါတယ်။ Cron jobs တွေက သတ်မှတ်ထားတဲ့ အချိန်၊ interval, recurring schedule တွေအတိုင်း agent ကို wake လုပ်ပြီး အလုပ်တစ်ခုလုပ်ခိုင်းနိုင်တဲ့ mechanism ဖြစ်ပါတယ်။
-
-Beginner အနေနဲ့ Cron jobs ကို ဒီလိုနားလည်လို့ရပါတယ်။
-
-> “အချိန်ရောက်ရင် OpenClaw ကို message တစ်ခုပို့ပြီး agent ကို အလုပ်တစ်ခုလုပ်ခိုင်းတာ”
-
-ဥပမာ — မနက် ၇ နာရီတိုင်း today brief ပို့ခိုင်းတာ၊ တစ်နာရီတစ်ခါ server health စစ်ခိုင်းတာ၊ တနင်္လာနေ့တိုင်း weekly report ထုတ်ခိုင်းတာ စတဲ့ automation မျိုးတွေပါ။
-
----
-
-## Cron Jobs ကို ဘယ်လိုအခြေအနေမှာသုံးမလဲ
-
-| Need | Use Cron? | Example |
-|---|---:|---|
-| မနက်တိုင်း summary လိုချင် | ✅ | Daily morning brief |
-| 20 minutes later reminder လိုချင် | ✅ | Deployment check reminder |
-| တစ်နာရီတစ်ခါ status စစ်ချင် | ✅ | API health check |
-| အပတ်တိုင်း report ထုတ်ချင် | ✅ | Weekly project report |
-| Event ဝင်လာမှ run ချင် | ⚠️ | Webhook / integration ပိုသင့်တော် |
-| အမြဲတမ်း context ကြည့်ပြီး လိုတာရှိရင် ပြောစေချင် | ⚠️ | Heartbeat ပိုသင့်တော် |
-
----
-
-## Common Use Cases
-
-### 1. Daily Morning Brief
-
-မနက်တိုင်း ကိုယ့် calendar, tasks, unread messages, project priorities တွေကို summarize လုပ်ခိုင်းနိုင်ပါတယ်။
-
+**ဥပမာ - နေ့စဉ် မနက် ၇ နာရီတိုင်း အကျဉ်းချုပ် တောင်းခံခြင်း:**
 ```bash
 openclaw cron add \
   --name "Morning brief" \
   --cron "0 7 * * *" \
   --tz "Asia/Bangkok" \
   --session isolated \
-  --message "Summarize today's calendar, unread important messages, and top priorities." \
+  --message "Summarize today's calendar and top priorities." \
   --announce
 ```
 
-**ဘယ်သူတွေသုံးသင့်လဲ**
-
-- Founder / manager
-- Developer lead
-- Busy professional
-- Personal productivity setup လုပ်ချင်သူ
+**Cron များကို စီမံရန်:**
+- ကြည့်ရှုရန်: `openclaw cron list`
+- ဖျက်ရန်/ရပ်ရန်: `openclaw cron disable <job-id>`
 
 ---
 
-### 2. One-shot Reminder
+## 🛡️ လုံခြုံရေးဆိုင်ရာ အကောင်းဆုံး အလေ့အကျင့်များ (Security Best Practices)
 
-တစ်ကြိမ်တည်း run မယ့် reminder မျိုးတွေကိုလည်း Cron job အနေနဲ့သုံးနိုင်ပါတယ်။
-
-```bash
-openclaw cron add \
-  --name "Check deployment" \
-  --at "20m" \
-  --session main \
-  --message "Remind me to check the deployment status." \
-  --wake now
-```
-
-**Use cases**
-
-- Deployment ပြီး 20 မိနစ်နေရင် status စစ်ရန်
-- Meeting မတိုင်ခင် preparation reminder
-- Backup ပြီးနောက် verification reminder
-- Long-running script ပြီးမပြီးပြန်စစ်ရန်
+- **Dashboard ကို Public မဖွင့်ပါနှင့်:** Localhost (သို့) Secure Tunnel ဖြင့်သာ အသုံးပြုပါ။
+- **စကားဝှက် ခိုင်မာစွာ ထားပါ:** Dashboard အတွက် Strong Password သုံးပါ။
+- **Workspace သန့်ရှင်းမှု:** လျှို့ဝှက် အချက်အလက်များ (Secrets/Passwords) ကို Workspace အတွင်း ရေးမထားပါနှင့်။ Environment Variables များကိုသာ သုံးပါ။
+- **စောင့်ကြည့် စစ်ဆေးပါ:** `openclaw logs --follow` နှင့် `openclaw doctor` ကို အသုံးပြု၍ ပုံမှန် စစ်ဆေးပါ။
 
 ---
 
-### 3. Weekly Project Report
+## 💻 စက်ပစ္စည်း လိုအပ်ချက်များ (Hardware Requirements)
 
-Project status, GitHub issues, PRs, Slack discussions, deployment notes တွေကို weekly summary ထုတ်ခိုင်းနိုင်ပါတယ်။
-
-```bash
-openclaw cron add \
-  --name "Weekly project report" \
-  --cron "0 9 * * 1" \
-  --tz "Asia/Bangkok" \
-  --session isolated \
-  --message "Review project updates and prepare a weekly progress summary." \
-  --announce
-```
-
-**Output example**
-
-```text
-Weekly Project Summary
-
-1. Completed
-- Login flow refactor finished
-- Dashboard API caching merged
-
-2. In progress
-- Mobile layout fixes
-- Billing webhook testing
-
-3. Risks
-- Telegram channel auth still unstable
-- Two PRs need review before Friday
-
-4. Suggested next actions
-- Review PR #42
-- Confirm staging deploy checklist
-```
+- **Gateway သီးသန့်နှင့် API အသုံးပြုရန်:** 2 vCPU, 4 GB RAM (အနည်းဆုံး) | 4 vCPU, 8 GB RAM (အကြံပြုချက်)
+- **Ollama ဖြင့် Local Model သုံးရန်:** 16 GB မှ 32 GB RAM / GPU လိုအပ်နိုင်ပါသည်။ Beginner များအတွက် Hosted APIs များကို အသုံးပြုခြင်းက ပိုမို အဆင်ပြေစေပါသည်။
 
 ---
 
-### 4. Server / API Health Monitoring
-
-OpenClaw ကို lightweight monitoring assistant အနေနဲ့ သုံးနိုင်ပါတယ်။ Cron job က API endpoint, server status, logs, uptime, disk usage စတာတွေကို စစ်ပြီး issue ရှိရင် channel ထဲပြန်ပို့နိုင်ပါတယ်။
-
-```bash
-openclaw cron add \
-  --name "API health check" \
-  --every "1h" \
-  --session isolated \
-  --message "Check the production API health endpoint and notify me if anything looks wrong." \
-  --announce
-```
-
-**Use cases**
-
-- Production API health check
-- Cron backup success/failure check
-- Disk space monitoring
-- SSL certificate expiry check
-- Website uptime check
-
----
-
-### 5. ChatOps Alerts
-
-OpenClaw ကို Slack, Telegram, Discord စတဲ့ channel တွေနဲ့ချိတ်ထားရင် Cron job output ကို team channel ထဲပို့နိုင်ပါတယ်။
-
-```bash
-openclaw cron add \
-  --name "Daily engineering digest" \
-  --cron "0 18 * * 1-5" \
-  --tz "Asia/Bangkok" \
-  --session isolated \
-  --message "Prepare a short engineering digest for today: merged PRs, open blockers, and urgent follow-ups." \
-  --announce \
-  --channel slack \
-  --to "channel:C1234567890"
-```
-
-**Good for**
-
-- Engineering daily digest
-- Ops alerts
-- Deployment summaries
-- Incident follow-up reminders
-- Team standup preparation
-
----
-
-### 6. Personal Admin Automation
-
-နေ့စဉ် admin tasks တွေကိုလည်း scheduled automation အနေနဲ့ ပြောင်းနိုင်ပါတယ်။
-
-**Examples**
-
-- ညတိုင်း မနက်ဖြန် meeting summary ပို့
-- Friday တိုင်း weekly reflection prompt ပို့
-- Month-end invoice reminder ပို့
-- Habit tracking reminder ပို့
-- Learning schedule reminder ပို့
-
-```bash
-openclaw cron add \
-  --name "Tomorrow planning" \
-  --cron "0 21 * * *" \
-  --tz "Asia/Bangkok" \
-  --session main \
-  --message "Help me plan tomorrow. Summarize tomorrow's meetings and suggest the top 3 priorities." \
-  --announce
-```
-
----
-
-### 7. Content / Research Digest
-
-OpenClaw ကို research assistant အဖြစ် schedule လုပ်ထားနိုင်ပါတယ်။
-
-**Examples**
-
-- AI news daily digest
-- Competitor update weekly digest
-- GitHub trending repositories summary
-- Security vulnerability watch
-- Product launch monitoring
-
-```bash
-openclaw cron add \
-  --name "AI research digest" \
-  --cron "0 8 * * 1-5" \
-  --tz "Asia/Bangkok" \
-  --session isolated \
-  --message "Find and summarize the most important AI developer updates from the last 24 hours." \
-  --announce
-```
-
----
-
-### 8. Developer Workflow Automation
-
-Developer တွေအတွက် Cron jobs က အလွန်အသုံးဝင်ပါတယ်။
-
-| Workflow | Example |
-|---|---|
-| PR review reminder | Open PRs ကိုနေ့တိုင်း summarize |
-| Dependency check | Weekly package updates စစ် |
-| Test status check | CI failures summarize |
-| Release prep | Friday release checklist remind |
-| Log review | Error logs daily summary |
-
-```bash
-openclaw cron add \
-  --name "Open PR review" \
-  --cron "0 10 * * 1-5" \
-  --tz "Asia/Bangkok" \
-  --session isolated \
-  --message "List open PRs that need my review and summarize the highest priority ones." \
-  --announce
-```
-
----
-
-## Cron vs Heartbeat vs Task Flow
-
-Beginner တွေ မကြာခဏရောထွေးတတ်တဲ့ concept သုံးခုရှိပါတယ်။
-
-| Feature | ဘယ်အတွက်သုံးလဲ | Example |
-|---|---|---|
-| **Cron** | တိကျတဲ့အချိန် / recurring schedule | Every day at 7 AM |
-| **Heartbeat** | Periodic agent attention / context check | “လိုတာရှိရင် ကိုယ့်ကိုပြော” |
-| **Task Flow** | Multi-step workflow with approvals | Research → Draft → Review → Send |
-
-Rule of thumb:
-
-- **“At 7 AM every day, do X”** → Cron
-- **“Every 30 minutes, check X”** → Cron
-- **“Keep an eye on things and alert me if needed”** → Heartbeat
-- **“Do A, then B, then ask approval before C”** → Task Flow
-
----
-
-## Useful Cron Commands
-
-```bash
-# List all cron jobs
-openclaw cron list
-
-# Show one job
-openclaw cron show <job-id>
-
-# See run history
-openclaw cron runs --id <job-id>
-
-# Edit a job
-openclaw cron edit <job-id>
-
-# Disable or remove jobs depending on CLI support
-openclaw cron disable <job-id>
-openclaw cron remove <job-id>
-```
-
----
-
-## Beginner Best Practices
-
-1. **Start with one simple job**  
-   ပထမဆုံး daily reminder တစ်ခုကနေစပါ။ တစ်ခါတည်း complex automation မလုပ်ပါနဲ့။
-
-2. **Use clear messages**  
-   Cron message ကို vague မရေးပါနဲ့။ Agent ကို ဘာလုပ်ရမလဲ တိတိကျကျပြောပါ။
-
-   Good:
-
-   ```text
-   Summarize today's calendar and list the top 3 priorities.
-   ```
-
-   Bad:
-
-   ```text
-   Check things.
-   ```
-
-3. **Use isolated session for reports**  
-   Daily digest, weekly report, monitoring jobs တွေကို `--session isolated` နဲ့ run ခိုင်းတာ ပိုရှင်းပါတယ်။
-
-4. **Set timezone explicitly**  
-   Schedule မှားမသွားအောင် `--tz "Asia/Bangkok"` လို timezone ကိုထည့်ပါ။
-
-5. **Announce only useful outputs**  
-   Job တိုင်း channel ထဲ announce မလုပ်ပါနဲ့။ Noise များရင် user က ignore လုပ်လာပါတယ်။
-
-6. **Check run history when debugging**  
-   Job မ run ဘူးထင်ရင် `openclaw cron runs --id <job-id>` နဲ့ history စစ်ပါ။
-
----
-
-## Practical Starter Ideas
-
-Beginner အနေနဲ့ အောက်က automation ၃ ခုကနေစရင် အကောင်းဆုံးပါ။
-
-### Starter 1 — Morning Brief
-
-```bash
-openclaw cron add \
-  --name "Morning brief" \
-  --cron "0 7 * * *" \
-  --tz "Asia/Bangkok" \
-  --session main \
-  --message "Give me a short morning brief with today's priorities." \
-  --announce
-```
-
-### Starter 2 — Evening Review
-
-```bash
-openclaw cron add \
-  --name "Evening review" \
-  --cron "0 21 * * *" \
-  --tz "Asia/Bangkok" \
-  --session main \
-  --message "Ask me to review what I completed today and help me plan tomorrow." \
-  --announce
-```
-
-### Starter 3 — Weekly Cleanup
-
-```bash
-openclaw cron add \
-  --name "Weekly cleanup" \
-  --cron "0 10 * * 6" \
-  --tz "Asia/Bangkok" \
-  --session isolated \
-  --message "Help me review unfinished tasks, stale PRs, and reminders for next week." \
-  --announce
-```
-
----
-
-## Summary
-
-OpenClaw Cron jobs က OpenClaw ကို **passive chatbot** ကနေ **active scheduled assistant** အဖြစ်ပြောင်းပေးပါတယ်။ Beginner အတွက် အကောင်းဆုံးစတင်နည်းက simple reminder, morning brief, weekly report တို့လို low-risk jobs တွေကနေစတာပါ။ နောက်ပိုင်းမှာ monitoring, ChatOps, research digest, developer workflow automation, personal admin automation စတာတွေအထိ တစ်ဆင့်ချင်းတိုးချဲ့နိုင်ပါတယ်။
-
-## Realworld scenarios၊ အမှားများဖြေရှင်းနည်းများ၊ နောက်ထပ်ဖတ်ရန် resource များ
-
-Official Showcase က OpenClaw ကို real projects တွေမှာ ဘယ်လိုသုံးနေကြလဲဆိုတာ ကောင်းကောင်းပြပေးပါတယ်။ အောက်ကဇယားထဲက **use case / benefit** တွေက showcase မှ, **challenge** column ကတော့ official troubleshooting/security/docs ကိုအခြေခံပြီး practical inference လုပ်ထားတာဖြစ်ပါတယ်။ 
-
-| Realworld scenario | ဘာလုပ်တာလဲ | အကျိုးကျေးဇူး | စိန်ခေါ်မှု |
-|---|---|---|---|
-| **PR Review → Telegram Feedback** | Code change ပြီး PR review result ကို Telegram ထဲပြန်ပို့ | repo workflow ကို mobile chat ထဲကနေ လက်ခံဖတ်နိုင် | repo auth, routing, message formatting စနစ်တကျပြင်ရ |
-| **Wine Cellar Skill from CSV** | local CSV ကိုအခြေခံပြီး custom skill တည်ဆောက် | ကိုယ့် data ပေါ်မှာ skill တည်ဆောက်ရလွယ် | data cleanliness, workspace file structure နားလည်ဖို့လို |
-| **Tesco Shop Autopilot** | meal plan → cart → delivery slot → order confirm | API မရှိတဲ့ website workflow ကို browser automation နဲ့လုပ်နိုင် | browser automation fragility, login/session safety |
-| **Bambu 3D Printer Control** | printer status, jobs, camera, calibration | hardware control ကို chat-native လုပ်နိုင် | plugin/skill, permissions, tooling complexity |
-| **14+ Agents under one Gateway** | orchestrator agent က worker agents များကိုခွဲပေး | complex multi-agent workflow တည်ဆောက်နိုင် | routing/bindings, sandboxing, policies မမှန်ရင် ရှုပ်ထွေးလာနိုင် |
-| **Home automation / air purifier / dashboards** | air quality, Grafana, home control | daily-life automation ကို chat UI တစ်ခုထဲတင်ဖြေရှင်းနိုင် | device permissions, local network exposure, security hardening လို |
-
-ဒီ showcase stories တွေက OpenClaw ရဲ့အားသာချက်ကို သေချာပြပါတယ်။ အဲဒါက “channel-agnostic control layer” ဖြစ်လို့ API ရှိတဲ့ system များတင်မက, browser-driven workflows, files/CSV, local devices, multiple agents, voice workflows စတာတွေကိုပါ one Gateway model နဲ့ချိတ်နိုင်တာပါ။ အားနည်းချက်ဘက်ကတော့ setup complexity, channel auth, security policy, prompt-injection risk, service reliability စတာတွေကို ကိုယ်တိုင်စီမံရတာပါ။ 
-
-**မကြာခဏတွေ့ရတဲ့ pitfall တချို့**
-
-1. **Bot online လိုပဲမြင်ရပေမယ့် message မပြန်ဘူး**  
-   အများဆုံးအကြောင်းရင်းက DM pairing pending, group mention gating (`requireMention`), channel/group allowlist mismatch ဖြစ်ပါတယ်။ Official troubleshooting docs က start လုပ်သင့်တဲ့ command ladder ကို `openclaw status` → `openclaw gateway status` → `openclaw logs --follow` → `openclaw doctor` → `openclaw channels status --probe` လို့ တိတိကျကျပေးထားပါတယ်။ 
-
-2. **Dashboard မချိတ်နိုင်ဘူး**  
-   Gateway URL မှားခြင်း, auth token/password mismatch, HTTP / secure context assumption မကိုက်ခြင်းတွေဖြစ်တတ်ပါတယ်။ Dashboard/control UI က admin surface ဖြစ်တာကြောင့် publicly expose မလုပ်ဘဲ localhost / Tailscale / SSH tunnel လမ်းကြောင်းသုံးပါ။ 
-
-3. **Config တစ်ခါပြင်ပြီးနောက် Gateway မတက်တော့ဘူး**  
-   OpenClaw က strict schema validation လုပ်တဲ့အတွက် unknown keys သို့ invalid values တွေကြောင့် boot မတက်နိုင်ပါဘူး။ ဒီလိုအချိန်မှာ `openclaw config validate` နဲ့ `openclaw doctor` ကိုသုံးပါ။ Validation fail ဖြစ်ရင် diagnostic commands များသာအလုပ်လုပ်တတ်ပါတယ်။ 
-
-4. **Security ကို လျော့တွက်မိတယ်**  
-   `openclaw security audit` docs က OpenClaw ကို default အနေနဲ့ personal-assistant trust model လို့ရှင်းပြထားပါတယ်။ မယုံကြည်ရတဲ့ user အများကြီးကို Gateway တစ်ခုတည်းနဲ့မျှဝေသုံးတာကို recommend မလုပ်ပါဘူး။ Multi-user/shared inbox setup မဖြစ်မနေလိုရင် sandboxing, separate gateways/OS users, DM scope hardening ကိုထည့်ရပါမယ်။ 
-
-5. **Local model နဲ့စတော့ ဘာကြောင့် quality မကောင်းတာလဲ**  
-   Official local-model docs က OpenClaw ဟာ long context နဲ့ prompt-injection defense ကောင်းတဲ့ model တွေကိုအထူးလိုလားတယ်လို့ ပြောထားပါတယ်။ Small/local cheap models နဲ့စရင် latency, truncation, security concerns တွေမြင့်တတ်လို့ beginner အတွက် hosted provider နဲ့စတာ ပိုလက်တွေ့ကျပါတယ်။ 
-
-6. **Native Windows က မတည်ငြိမ်သလိုခံစားရတယ်**  
-   ဒါက documentation နဲ့ကိုက်ညီပါတယ်။ Official Windows page က WSL2 ကိုပိုတည်ငြိမ်ပြီး full experience အတွက် recommend လုပ်ထားပါတယ်။ Native Windows မှာ CLI-only သို့မဟုတ် basic Gateway use လုပ်လို့ရပေမယ့် caveat များရှိပါတယ်။ 
-
-# 🔐 Security Best Practices — OpenClaw ကို လုံခြုံစွာ အသုံးပြုရန် လမ်းညွှန်
-
-OpenClaw က self-hosted AI gateway ဖြစ်တဲ့အတွက် flexibility အများကြီးရှိပေမယ့် security responsibility က user ဘက်မှာပိုများပါတယ်။
-
-## 🧠 Core Security Mindset
-- Your machine = your responsibility
-- Trusted personal assistant model
-- Untrusted users ကို direct access မပေးပါ
-- AI tools (exec, browser, file I/O) powerful ဖြစ်တယ်
-
-## ⚠️ Common Security Risks
-- Prompt Injection → wrong actions
-- Tool Abuse → system damage
-- Public Dashboard Exposure → full takeover
-- Shared Gateway → data leakage
-- Weak Auth → unauthorized access
-- Local File Access → secrets leak
-
-## 🛡️ Beginner Security Checklist
-
-### 1. Dashboard ကို Public မဖွင့်ပါ
-- ❌ Public IP
-- ✅ localhost / VPN / SSH tunnel
-
-### 2. Authentication Enable
-- strong password/token သုံးပါ
-
-### 3. Tools Control
-- exec, browser, file access ကို limit လုပ်ပါ
-
-### 4. Workspace Clean ထားပါ
-- secrets မထည့်ပါ
-- env variables သုံးပါ
-
-### 5. Channel Security
-- bot tokens secret
-- allowlist + mention gating
-
-### 6. Multi-Agent Isolation
-- workspace ခွဲသုံးပါ
-
-### 7. Config Validation
-```bash
-openclaw config validate
-openclaw doctor
-```
-
-### 8. Logs Monitoring
-```bash
-openclaw logs --follow
-```
-
-### 9. Cron Job Safety
-- sensitive tasks avoid
-- clean prompts
-
-### 10. Regular Audit
-```bash
-openclaw doctor
-openclaw status
-```
-
-## 🚨 Golden Rules
-- ❌ Public dashboard
-- ❌ Unknown users
-- ❌ Secrets in workspace
-
-- ✅ Localhost only
-- ✅ Strong auth
-- ✅ Monitoring
-
-## 🧭 Summary
-Security = Convenience + Control
-
-Start simple:
-1. Local setup
-2. Minimal tools
-3. Expand gradually
-
-# Minimum Hardware Requirement နှင့် Free အသုံးပြုနည်း — Ollama / Free API လမ်းကြောင်း
-
-OpenClaw ကိုသုံးဖို့ hardware requirement နှစ်မျိုးခွဲနားလည်ရပါမယ်။ ပထမတစ်မျိုးက **OpenClaw Gateway ကို run ဖို့လိုတဲ့ requirement** ဖြစ်ပြီး, ဒုတိယတစ်မျိုးက **AI model ကို ကိုယ့်စက်ထဲမှာ local run ဖို့လိုတဲ့ requirement** ဖြစ်ပါတယ်။
-
-## Hardware Requirement အတိုချုပ်
-
-| Setup type | Minimum | Recommended | ဘယ်သူအတွက်သင့်လဲ |
-|---|---:|---:|---|
-| Gateway only + hosted API | 2 vCPU, 4 GB RAM | 4 vCPU, 8 GB RAM | Beginner |
-| Gateway + Ollama small | 4-core CPU, 8–16 GB RAM | 16–32 GB RAM | Free testing |
-| Gateway + 7B/8B model | 16 GB RAM | 32 GB RAM / GPU | Daily use |
-
----
-
-## Free အသုံးပြုနည်း (၃ လမ်း)
-
-### 1. Ollama Local Model
-
-```bash
-ollama pull llama3.1:8b
-ollama run llama3.1:8b
-```
-
-OpenClaw နဲ့စမ်း:
-
-```bash
-openclaw infer chat --model ollama/llama3.1:8b --message "Hello"
-```
-
-**Pros**
-- Free (no API cost)
-- Private
-
-**Cons**
-- Slower
-- Lower quality
-
----
-
-### 2. Free-tier API
-
-```bash
-export OPENROUTER_API_KEY="your-key"
-openclaw onboard
-```
-
-**Pros**
-- Easy
-- Better quality
-
-**Cons**
-- Rate limit
-- Not fully private
-
----
-
-### 3. Hybrid Setup
-
-| Task | Model |
-|---|---|
-| Reminder | Ollama |
-| Chat | Ollama |
-| Complex tasks | Hosted model |
-
----
-
-## Beginner Setup Example
-
-```bash
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
-ollama pull llama3.1:8b
-openclaw doctor
-openclaw dashboard
-```
-
----
-
-## Recommendation
-
-1. Start with Ollama (free)
-2. Use small model first
-3. Add API later if needed
-4. Use hybrid approach
-
----
-
-## Summary
-
-- Gateway = light requirement
-- AI model = heavy requirement
-- Free = possible with Ollama
-- Best = hybrid approach
-
-**နောက်ထပ်ဖတ်ရန် အကြံပြု resource list**
-
-Official doc: https://docs.openclaw.ai/start/getting-started
-
-- **Getting Started** — ပထမဆုံးဖတ်သင့်တဲ့ official page; ၅ မိနစ်လောက်နဲ့ running Gateway + auth + first chat ရဖို့ ရည်ရွယ်ထားပါတယ်။ 
-- **Install** — installer script, npm/pnpm/bun, from source, verify, PATH troubleshooting အားလုံးပါတဲ့ canonical install page။ 
-- **Onboarding (CLI)** — `openclaw onboard` ကို ဘာတွေ configure ပေးသလဲဆိုတာ beginner-friendly အနေနဲ့ရှင်းထားတဲ့ page။ 
-- **CLI Reference** — command များကို စုံလင်ဆုံး reference အနေနဲ့ရှုနိုင်တဲ့ page။ 
-- **Configuration** နဲ့ **Configuration Reference** — `openclaw.json` format, hot reload, schema validation, channels, tools, secrets စတာသင်ယူဖို့။ 
-- **Tools and Plugins** — tool, skill, plugin ရဲ့ ကွာခြားချက်ကို နားလည်ဖို့ အကောင်းဆုံး page။ 
-- **Skills** နဲ့ **Creating Skills** — custom SKILL.md ရေးခြင်း, precedence, allowlists, hello-world example အတွက်။ 
-- **Troubleshooting** နဲ့ **Doctor** — stuck ဖြစ်တိုင်း ပြန်သုံးရမယ့် official runbook နှစ်ခု။ 
-- **Security / Security Audit** — OpenClaw ကို public/real-world deployment လုပ်မယ်ဆို မဖြစ်မနေဖတ်သင့်တဲ့ page များ။ 
-- **Windows platform page** နဲ့ **Microsoft WSL install docs** — Windows user များအတွက် recommended path နားလည်ဖို့။ 
-- **macOS app docs** — menu-bar app, permissions, local/remote gateway attachment ကိုသုံးချင်ရင်။ 
-- **GitHub repository** — source code, releases, issues, docs directory, community activity ကိုတိုက်ရိုက်ကြည့်ချင်ရင်။ 
-
-အဆုံးသတ်အနေနဲ့, beginner တစ်ယောက်အတွက် OpenClaw ကိုလေ့လာရာမှာ အရေးကြီးဆုံးအချက်က **feature များလို့ မကြောက်ပါနဲ့** ဆိုတာပါ။ ပထမနေ့မှာ installer → onboarding → dashboard → first chat လောက်ပဲရအောင်လုပ်ပါ။ ဒုတိယအဆင့်မှာ `doctor`, `status`, `config` ကိုလေ့လာပါ။ တတိယအဆင့်မှာ agent, skill, plugin, channel ကိုတစ်ခုချင်းထည့်ပါ။ ဒီလိုသွားရင် OpenClaw ကို “ကြီးမားလှတဲ့ platform” လို့မခံစားဘဲ “တစ်ဆင့်ချင်းစီတက်သွားလို့ရတဲ့ toolkit” လို့မြင်လာပါလိမ့်မယ်။ 
+## 📚 ထပ်မံလေ့လာရန် (Further Resources)
+
+- [Official Getting Started Guide](https://docs.openclaw.ai/start/getting-started)
+- [Official CLI Reference](https://docs.openclaw.ai)
+- အခက်အခဲ တစ်စုံတစ်ရာ ရှိပါက `openclaw doctor` ကို အမြဲတမ်း အရင်ဆုံး အသုံးပြုပါ။
