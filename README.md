@@ -1,7 +1,5 @@
 # OpenClaw အသုံးပြုသူ လက်တွေ့လမ်းညွှန် (Beginner-Friendly Guide)
 
-![GitHub Release](https://img.shields.io/github/v/release/kzt-kingston/openclaw-guide?color=blue&label=version)
-
 <img width="1254" height="1254" alt="image" src="https://github.com/user-attachments/assets/79e11c7c-f1d6-4e9d-9cad-1fdd3d20c6bf" />
 
 OpenClaw သည် သင့်စက်ပေါ်တွင် ကိုယ်တိုင် run နိုင်သော (Self-hosted) AI Assistant Gateway တစ်ခု ဖြစ်ပါသည်။ သာမန် Chatbot တစ်ခုထက်ပို၍၊ Telegram, Discord, Slack, WhatsApp ကဲ့သို့သော Messaging App များနှင့် AI Agent များကြားတွင် **Control Center** အဖြစ် ချိတ်ဆက် လုပ်ဆောင်ပေးပါသည်။
