@@ -382,3 +382,12 @@ openclaw cron add \
 - [Official Getting Started Guide](https://docs.openclaw.ai/start/getting-started)
 - [Official CLI Reference](https://docs.openclaw.ai)
 - အခက်အခဲ တစ်စုံတစ်ရာ ရှိပါက `openclaw doctor` ကို အမြဲတမ်း အရင်ဆုံး အသုံးပြုပါ။
+
+---
+
+<p align="center">
+  <sub>
+    <i>Documentation snapshot: 29 April 2026</i><br>
+    Reflects the project as of this date; later changes may not be documented.
+  </sub>
+</p>
